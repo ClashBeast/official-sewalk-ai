@@ -179,6 +179,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const overlay = document.getElementById('authOverlay');
   if (overlay) overlay.addEventListener('click', e => { if (e.target === overlay) closeAuthModal(); });
 
+  // Single global listener to close all dots menus on outside click
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.msg-dots-btn')) {
+      document.querySelectorAll('.msg-dots-menu').forEach(m => m.style.display = 'none');
+    }
+  });
+
   if (_supabase) {
     _supabase.auth.getSession().then(({ data: { session } }) => {
       currentUser = session?.user ?? null;
@@ -605,12 +612,9 @@ function buildAIMsgActions(msgId, modeLabel, replyText) {
   dotsBtn.onclick = (e) => {
     e.stopPropagation();
     const isOpen = dotsMenu.style.display !== 'none';
-    // Close all other open menus
     document.querySelectorAll('.msg-dots-menu').forEach(m => m.style.display = 'none');
     dotsMenu.style.display = isOpen ? 'none' : 'block';
   };
-  // Close menu on outside click
-  document.addEventListener('click', () => { dotsMenu.style.display = 'none'; }, { once: false });
 
   const dotsWrap = document.createElement('div');
   dotsWrap.style.position = 'relative';
