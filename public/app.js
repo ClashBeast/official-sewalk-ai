@@ -536,10 +536,48 @@ function updateMemoryBar() {
 // =============================================
 //  SEND MESSAGE
 // =============================================
+// ── Image Upload State ────────────────────────────────
+let pendingImageBase64 = null;
+let pendingImageMime = null;
+
+function handleImageUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('⚠️ Please upload an image file.'); return; }
+  if (file.size > 5 * 1024 * 1024) { showToast('⚠️ Image too large. Max 5MB.'); return; }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    pendingImageBase64 = dataUrl.split(',')[1];
+    pendingImageMime = file.type;
+
+    // Show preview
+    const bar = document.getElementById('imagePreviewBar');
+    bar.style.display = 'block';
+    bar.innerHTML = `
+      <div class="img-preview-wrap">
+        <img src="${dataUrl}" alt="preview"/>
+        <button class="img-preview-remove" onclick="clearImageUpload()" title="Remove">✕</button>
+      </div>`;
+  };
+  reader.readAsDataURL(file);
+  // Reset input so same file can be re-selected
+  event.target.value = '';
+}
+
+function clearImageUpload() {
+  pendingImageBase64 = null;
+  pendingImageMime = null;
+  const bar = document.getElementById('imagePreviewBar');
+  bar.style.display = 'none';
+  bar.innerHTML = '';
+}
+
 async function sendMsg() {
   const input = document.getElementById('userInput');
   const val = input.value.trim();
-  if (!val || input.disabled) return;
+  if ((!val && !pendingImageBase64) || input.disabled) return;
 
   // Guest limit: allow up to GUEST_MSG_LIMIT messages, then prompt sign-in
   if (!currentUser) {
@@ -573,11 +611,39 @@ async function sendMsg() {
 
   const isFirst = session.messages.filter(m => m.role === 'user').length === 0;
 
-  appendMsg('user', val, modeLabel);
+  // Capture image before clearing
+  const imgBase64 = pendingImageBase64;
+  const imgMime = pendingImageMime;
+
+  // Show user message with image if present
+  if (imgBase64) {
+    const userDiv = document.createElement('div');
+    userDiv.className = 'msg user';
+    userDiv.innerHTML = `<div class="sender-row"><div class="sender">You</div></div>
+      <img src="data:${imgMime};base64,${imgBase64}" class="msg-image" alt="uploaded"/>
+      ${val ? `<div style="margin-top:6px">${val}</div>` : ''}`;
+    msgs.appendChild(userDiv);
+    msgs.scrollTop = msgs.scrollHeight;
+  } else {
+    appendMsg('user', val || '', modeLabel);
+  }
+
   input.value = '';
   input.disabled = true;
+  clearImageUpload();
 
-  session.messages.push({ role: 'user', content: val });
+  // Build message content for API
+  let userContent;
+  if (imgBase64) {
+    userContent = [
+      { inline_data: { mime_type: imgMime, data: imgBase64 } },
+      { text: val || 'Please analyse this image.' }
+    ];
+  } else {
+    userContent = val;
+  }
+
+  session.messages.push({ role: 'user', content: imgBase64 ? `[Image attached] ${val || 'Please analyse this image.'}` : val });
   if (currentUser) {
     await saveSessionStore(currentMode);
   }
@@ -600,7 +666,11 @@ async function sendMsg() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         system: systemPrompts[currentMode],
-        messages: session.messages
+        messages: session.messages,
+        ...(imgBase64 && {
+          image: { base64: imgBase64, mime: imgMime },
+          imageText: val || 'Please analyse this image.'
+        })
       })
     });
 
