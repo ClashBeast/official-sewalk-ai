@@ -481,21 +481,10 @@ function appendMsg(role, content, label, targetId) {
   } else {
     const msgId = targetId || ('msg-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7));
     div.id = msgId;
-
-    const senderRow = document.createElement('div');
-    senderRow.className = 'sender-row';
-    const sender = document.createElement('div');
-    sender.className = 'sender';
-    sender.textContent = label;
-    const dlBtn = document.createElement('button');
-    dlBtn.className = 'msg-download-btn';
-    dlBtn.title = 'Download as PDF';
-    dlBtn.setAttribute('onclick', `downloadMessageAsPDF('${msgId}')`);
-    dlBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF`;
-    senderRow.appendChild(sender);
-    senderRow.appendChild(dlBtn);
+    const { senderRow, actionBar } = buildAIMsgActions(msgId, label, content);
     div.appendChild(senderRow);
     div.appendChild(renderContent(content));
+    div.appendChild(actionBar);
   }
 
   msgs.appendChild(div);
@@ -536,63 +525,134 @@ function updateMemoryBar() {
 // =============================================
 //  SEND MESSAGE
 // =============================================
+// ── AI Message Action Bar Builder ─────────────────────
+function buildAIMsgActions(msgId, modeLabel, replyText) {
+  // Top row: sender name only
+  const senderRow = document.createElement('div');
+  senderRow.className = 'sender-row';
+  const sender = document.createElement('div');
+  sender.className = 'sender';
+  sender.textContent = modeLabel;
+  senderRow.appendChild(sender);
+
+  // Action bar: 👍 👎 🔄 📋 ⋮
+  const actionBar = document.createElement('div');
+  actionBar.className = 'msg-action-bar';
+
+  // Like
+  const likeBtn = document.createElement('button');
+  likeBtn.className = 'msg-action-btn';
+  likeBtn.title = 'Good response';
+  likeBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>`;
+  likeBtn.onclick = () => {
+    likeBtn.classList.toggle('active-like');
+    dislikeBtn.classList.remove('active-dislike');
+  };
+
+  // Dislike
+  const dislikeBtn = document.createElement('button');
+  dislikeBtn.className = 'msg-action-btn';
+  dislikeBtn.title = 'Bad response';
+  dislikeBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>`;
+  dislikeBtn.onclick = () => {
+    dislikeBtn.classList.toggle('active-dislike');
+    likeBtn.classList.remove('active-like');
+  };
+
+  // Regenerate
+  const regenBtn = document.createElement('button');
+  regenBtn.className = 'msg-action-btn';
+  regenBtn.title = 'Regenerate response';
+  regenBtn.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>`;
+  regenBtn.onclick = () => regenResponse(msgId);
+
+  // Copy
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'msg-action-btn';
+  copyBtn.title = 'Copy text';
+  copyBtn.innerHTML = `<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(replyText);
+    copyBtn.classList.add('copied');
+    copyBtn.title = 'Copied!';
+    setTimeout(() => { copyBtn.classList.remove('copied'); copyBtn.title = 'Copy text'; }, 2000);
+  };
+
+  // Three dots menu
+  const dotsBtn = document.createElement('button');
+  dotsBtn.className = 'msg-action-btn msg-dots-btn';
+  dotsBtn.title = 'More options';
+  dotsBtn.innerHTML = `<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>`;
+
+  const dotsMenu = document.createElement('div');
+  dotsMenu.className = 'msg-dots-menu';
+  dotsMenu.style.display = 'none';
+  dotsMenu.innerHTML = `
+    <button class="dots-menu-item" onclick="downloadMessageAsPDF('${msgId}')">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export to PDF
+    </button>
+    <div class="dots-menu-item model-label">
+      <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Model: Gemini 3.1 Flash
+    </div>
+    <div class="dots-menu-divider"></div>
+    <button class="dots-menu-item dots-menu-danger" onclick="showToast('⚠️ Report sent. Thank you.')">
+      <svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+      Report legal issue
+    </button>`;
+
+  dotsBtn.onclick = (e) => {
+    e.stopPropagation();
+    const isOpen = dotsMenu.style.display !== 'none';
+    // Close all other open menus
+    document.querySelectorAll('.msg-dots-menu').forEach(m => m.style.display = 'none');
+    dotsMenu.style.display = isOpen ? 'none' : 'block';
+  };
+  // Close menu on outside click
+  document.addEventListener('click', () => { dotsMenu.style.display = 'none'; }, { once: false });
+
+  const dotsWrap = document.createElement('div');
+  dotsWrap.style.position = 'relative';
+  dotsWrap.appendChild(dotsBtn);
+  dotsWrap.appendChild(dotsMenu);
+
+  actionBar.appendChild(likeBtn);
+  actionBar.appendChild(dislikeBtn);
+  actionBar.appendChild(regenBtn);
+  actionBar.appendChild(copyBtn);
+  actionBar.appendChild(dotsWrap);
+
+  return { senderRow, actionBar };
+}
+
 // ── Regenerate Response ───────────────────────────────
 async function regenResponse(msgId) {
   const session = getSession(currentMode, currentSessionId);
   if (!session) return;
-
-  // Remove last assistant message from history
   if (session.messages[session.messages.length - 1]?.role === 'assistant') {
     session.messages.pop();
   }
-
   const modeLabel = document.querySelector('.mode-btn.active .label').textContent;
   const msgEl = document.getElementById(msgId);
   if (!msgEl) return;
-
-  // Show thinking state
   msgEl.innerHTML = `<div class="sender-row"><div class="sender">${modeLabel}</div></div><span style="opacity:0.45">Thinking...</span>`;
-
   try {
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        system: systemPrompts[currentMode],
-        messages: session.messages
-      })
+      body: JSON.stringify({ system: systemPrompts[currentMode], messages: session.messages })
     });
-
     if (!response.ok) throw new Error(`API error ${response.status}`);
     const data = await response.json();
     const reply = data.content?.[0]?.text || "Sorry, I couldn't respond. Please try again.";
-
     session.messages.push({ role: 'assistant', content: reply });
     if (currentUser) await saveSessionStore(currentMode);
-
-    // Re-render the message
     msgEl.innerHTML = '';
-    const senderRow = document.createElement('div');
-    senderRow.className = 'sender-row';
-    const sender = document.createElement('div');
-    sender.className = 'sender';
-    sender.textContent = modeLabel;
-    const dlBtn = document.createElement('button');
-    dlBtn.className = 'msg-download-btn';
-    dlBtn.title = 'Download as PDF';
-    dlBtn.setAttribute('onclick', `downloadMessageAsPDF('${msgId}')`);
-    dlBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF`;
-    const regenBtn = document.createElement('button');
-    regenBtn.className = 'msg-regen-btn';
-    regenBtn.title = 'Regenerate response';
-    regenBtn.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>`;
-    regenBtn.onclick = () => regenResponse(msgId);
-    senderRow.appendChild(sender);
-    senderRow.appendChild(dlBtn);
-    senderRow.appendChild(regenBtn);
+    const { senderRow, actionBar } = buildAIMsgActions(msgId, modeLabel, reply);
     msgEl.appendChild(senderRow);
     msgEl.appendChild(renderContent(reply));
-
+    msgEl.appendChild(actionBar);
   } catch (err) {
     msgEl.innerHTML = `<div class="sender-row"><div class="sender">${modeLabel}</div></div><span style="color:#f87171">⚠️ ${err.message}</span>`;
   }
@@ -754,26 +814,10 @@ async function sendMsg() {
     const typingEl = document.getElementById(typingId);
     if (typingEl) {
       typingEl.innerHTML = '';
-      const senderRow = document.createElement('div');
-      senderRow.className = 'sender-row';
-      const sender = document.createElement('div');
-      sender.className = 'sender';
-      sender.textContent = modeLabel;
-      const dlBtn = document.createElement('button');
-      dlBtn.className = 'msg-download-btn';
-      dlBtn.title = 'Download as PDF';
-      dlBtn.setAttribute('onclick', `downloadMessageAsPDF('${typingId}')`);
-      dlBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF`;
-      const regenBtn = document.createElement('button');
-      regenBtn.className = 'msg-regen-btn';
-      regenBtn.title = 'Regenerate response';
-      regenBtn.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>`;
-      regenBtn.onclick = () => regenResponse(typingId);
-      senderRow.appendChild(sender);
-      senderRow.appendChild(dlBtn);
-      senderRow.appendChild(regenBtn);
+      const { senderRow, actionBar } = buildAIMsgActions(typingId, modeLabel, reply);
       typingEl.appendChild(senderRow);
       typingEl.appendChild(renderContent(reply));
+      typingEl.appendChild(actionBar);
     }
   } catch (err) {
     const typingEl = document.getElementById(typingId);
