@@ -177,7 +177,12 @@
         <div class="auth-lock-sub">Sign in to get unlimited messages &amp; save your sessions.</div>
         <button class="auth-lock-btn" onclick="openAuthModal()">Sign In / Sign Up</button>
       </div>
+      <div id="imagePreviewBar" style="display:none;padding:8px 20px 0;"></div>
       <div class="input-row">
+        <label for="imageUploadInput" class="img-upload-btn" title="Upload image for AI to analyse">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </label>
+        <input type="file" id="imageUploadInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)"/>
         <input type="text" id="userInput" placeholder="Ask your Gym Trainer..."
                onkeydown="if(event.key==='Enter') sendMsg()" />
         <button class="send-btn" onclick="sendMsg()">↑</button>
