@@ -321,6 +321,60 @@
   </div>
 </div>
 
+<div id="authOverlay">
+  <div class="auth-modal">
+    <div class="auth-logo">SeWalk <span>AI</span></div>
+    <div class="auth-tagline">Sign in to unlock unlimited chats, save sessions &amp; sync across devices.</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabSignIn" onclick="switchAuthTab('signin')">Sign In</button>
+      <button class="auth-tab" id="tabSignUp" onclick="switchAuthTab('signup')">Create Account</button>
+    </div>
+
+    <div id="authError" class="auth-error"></div>
+    <div id="authSuccess" class="auth-success"></div>
+
+    <!-- OAuth buttons -->
+    <div class="oauth-grid">
+      <button class="oauth-btn google" onclick="authOAuth('google')">
+        <span class="oauth-icon"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.1 33.5 29.6 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l6-6C34.5 6.5 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.7-.2-4z"/><path fill="#34A853" d="M6.3 14.7l7 5.1C15 16.1 19.1 13 24 13c3.1 0 5.8 1.1 7.9 3l6-6C34.5 6.5 29.6 4 24 4c-7.9 0-14.7 4.4-18.7 10.7z"/><path fill="#FBBC05" d="M24 44c5.5 0 10.4-1.9 14.2-5l-6.6-5.4C29.6 35.3 26.9 36 24 36c-5.6 0-10.3-3.6-11.9-8.5l-6.9 5.3C9.1 39.5 16 44 24 44z"/><path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.8 2.3-2.3 4.3-4.3 5.7l6.6 5.4C41.7 36.5 44.5 30.7 44.5 24c0-1.3-.1-2.7-.2-4z"/></svg></span>
+        <span class="oauth-label">Continue with Google</span>
+        <span class="oauth-arrow">→</span>
+      </button>
+    </div>
+
+    <div class="auth-divider"><span>OR</span></div>
+
+    <div id="formSignIn">
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="siEmail" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="siPassword" placeholder="Your password" autocomplete="current-password"
+               onkeydown="if(event.key==='Enter') authSignIn()"/>
+      </div>
+      <button class="auth-submit-btn" id="signinBtn" onclick="authSignIn()">Sign In with Email</button>
+    </div>
+    <div id="formSignUp" style="display:none;">
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="suEmail" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="suPassword" placeholder="Min. 6 characters" autocomplete="new-password"
+               onkeydown="if(event.key==='Enter') authSignUp()"/>
+      </div>
+      <button class="auth-submit-btn" id="signupBtn" onclick="authSignUp()">Create Account</button>
+    </div>
+
+    <div class="auth-divider" style="margin-top:16px;"><span>continue without signing in</span></div>
+    <button class="auth-guest-btn" onclick="closeAuthModal()">Continue as guest (10 free messages, no saving)</button>
+  </div>
+</div>
+
 <script src="app.js"></script>
 </body>
 </html>
