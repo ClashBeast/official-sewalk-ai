@@ -250,30 +250,54 @@
     display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;
   }
   .msg.ai .sender-row .sender { margin-bottom: 0; }
-  .msg-download-btn {
-    display: flex; align-items: center; background: transparent; border: none;
-    cursor: pointer; opacity: 0; transition: opacity 0.2s, color 0.2s, background 0.2s;
-    padding: 3px 5px; border-radius: 5px; color: var(--muted);
-    gap: 4px; font-size: 0.62rem; font-family: 'DM Sans', sans-serif; letter-spacing: 0.04em;
+  .msg-download-btn { display: none; }
+  .msg-regen-btn { display: none; }
+
+  /* ── Message Action Bar ─────────────────────────────── */
+  .msg-action-bar {
+    display: flex; align-items: center; gap: 2px;
+    margin-top: 10px; opacity: 0; transition: opacity 0.2s;
   }
-  .msg.ai:hover .msg-download-btn { opacity: 1; }
-  .msg-download-btn:hover { color: var(--text); background: rgba(255,255,255,0.07); }
-  .msg-download-btn svg {
-    width: 12px; height: 12px; stroke: currentColor; fill: none;
+  .msg.ai:hover .msg-action-bar { opacity: 1; }
+  .msg-action-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 6px;
+    background: transparent; border: none; cursor: pointer;
+    color: var(--muted); transition: color 0.2s, background 0.2s;
+  }
+  .msg-action-btn:hover { color: var(--text); background: rgba(255,255,255,0.07); }
+  .msg-action-btn svg {
+    width: 13px; height: 13px; stroke: currentColor; fill: none;
     stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;
   }
-  .msg-regen-btn {
-    display: flex; align-items: center; justify-content: center;
-    background: transparent; border: none; cursor: pointer;
-    opacity: 0; transition: opacity 0.2s, color 0.2s, background 0.2s, transform 0.3s;
-    padding: 3px 5px; border-radius: 5px; color: var(--muted);
+  .msg-action-btn.active-like { color: #4ade80; }
+  .msg-action-btn.active-dislike { color: #f87171; }
+  .msg-action-btn.copied { color: var(--accent); }
+  .msg-dots-btn { position: relative; }
+  .msg-dots-menu {
+    position: absolute; bottom: 32px; right: 0;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 6px; min-width: 200px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4); z-index: 100;
   }
-  .msg.ai:hover .msg-regen-btn { opacity: 1; }
-  .msg-regen-btn:hover { color: var(--accent); background: rgba(201,168,76,0.1); transform: rotate(180deg); }
-  .msg-regen-btn svg {
-    width: 12px; height: 12px; stroke: currentColor; fill: none;
-    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  .dots-menu-item {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; padding: 9px 12px; border-radius: 8px;
+    background: none; border: none; cursor: pointer;
+    color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem; text-align: left; transition: background 0.15s;
   }
+  .dots-menu-item:hover { background: rgba(255,255,255,0.06); }
+  .dots-menu-item svg {
+    width: 13px; height: 13px; stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;
+    color: var(--muted);
+  }
+  .dots-menu-item.model-label { color: var(--muted); cursor: default; font-size: 0.78rem; }
+  .dots-menu-item.model-label:hover { background: none; }
+  .dots-menu-divider { height: 1px; background: var(--border); margin: 4px 6px; }
+  .dots-menu-danger { color: #f87171 !important; }
+  .dots-menu-danger svg { color: #f87171 !important; }
 
   /* ---- MARKDOWN ---- */
   .msg.ai .md p { margin-bottom: 0.6em; line-height: 1.7; }
