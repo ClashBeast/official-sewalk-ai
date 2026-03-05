@@ -262,6 +262,18 @@
     width: 12px; height: 12px; stroke: currentColor; fill: none;
     stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;
   }
+  .msg-regen-btn {
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none; cursor: pointer;
+    opacity: 0; transition: opacity 0.2s, color 0.2s, background 0.2s, transform 0.3s;
+    padding: 3px 5px; border-radius: 5px; color: var(--muted);
+  }
+  .msg.ai:hover .msg-regen-btn { opacity: 1; }
+  .msg-regen-btn:hover { color: var(--accent); background: rgba(201,168,76,0.1); transform: rotate(180deg); }
+  .msg-regen-btn svg {
+    width: 12px; height: 12px; stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  }
 
   /* ---- MARKDOWN ---- */
   .msg.ai .md p { margin-bottom: 0.6em; line-height: 1.7; }
