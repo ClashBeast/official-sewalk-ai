@@ -49,6 +49,15 @@
     --gold-glow: 0 0 30px rgba(201,168,76,0.15);
   }
 
+  [data-theme="light"] {
+    --bg: #f5f0e8;
+    --surface: #ede8da;
+    --surface2: #e0d8c8;
+    --border: rgba(150,120,40,0.2);
+    --text: #1a1500;
+    --muted: #7a6f55;
+  }
+
   body {
     font-family: 'DM Sans', sans-serif;
     background: var(--bg);
@@ -61,6 +70,2160 @@
   }
 
   /* ---- HEADER ---- */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 32px; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(10,8,0,0.92); backdrop-filter: blur(20px);
+    box-shadow: 0 1px 0 rgba(201,168,76,0.1);
+  }
+  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.25rem; letter-spacing: -0.5px; }
+  .logo span {
+    background: linear-gradient(90deg, #c9a84c 0%, #f5e17a 40%, #c9a84c 60%, #a8852a 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: goldShimmer 4s linear infinite;
+  }
+  .mode-badge {
+    font-size: 0.72rem; font-weight: 500; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 5px 12px;
+    border-radius: 99px; border: 1px solid currentColor; transition: all 0.3s;
+  }
+
+  /* ---- MODE SELECTOR ---- */
+  .mode-selector {
+    display: flex; gap: 10px; padding: 20px 32px;
+    border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none;
+  }
+  .mode-selector::-webkit-scrollbar { display: none; }
+  .mode-btn {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 7px; padding: 14px 20px; border-radius: var(--radius);
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; transition: all 0.25s ease;
+    white-space: nowrap; min-width: 90px; position: relative; overflow: hidden;
+  }
+  .mode-btn::before {
+    content: ''; position: absolute; inset: 0;
+    opacity: 0; transition: opacity 0.3s; border-radius: var(--radius);
+  }
+  .mode-btn .icon { font-size: 1.6rem; position: relative; z-index: 1; }
+  .mode-btn .label {
+    font-size: 0.72rem; font-weight: 500; letter-spacing: 0.04em;
+    color: var(--muted); position: relative; z-index: 1; transition: color 0.25s;
+  }
+  .mode-btn[data-mode="gym"].active    { border-color: var(--gym); }
+  .mode-btn[data-mode="gym"].active::before    { background: rgba(255,107,53,0.12); opacity: 1; }
+  .mode-btn[data-mode="gym"].active .label    { color: var(--gym); }
+  .mode-btn[data-mode="lib"].active    { border-color: var(--lib); }
+  .mode-btn[data-mode="lib"].active::before    { background: rgba(78,205,196,0.12); opacity: 1; }
+  .mode-btn[data-mode="lib"].active .label    { color: var(--lib); }
+  .mode-btn[data-mode="music"].active  { border-color: var(--music); }
+  .mode-btn[data-mode="music"].active::before  { background: rgba(224,64,251,0.12); opacity: 1; }
+  .mode-btn[data-mode="music"].active .label  { color: var(--music); }
+  .mode-btn[data-mode="jee"].active    { border-color: var(--jee); }
+  .mode-btn[data-mode="jee"].active::before    { background: rgba(245,200,66,0.12); opacity: 1; }
+  .mode-btn[data-mode="jee"].active .label    { color: var(--jee); }
+  .mode-btn[data-mode="companion"].active { border-color: var(--companion); }
+  .mode-btn[data-mode="companion"].active::before { background: rgba(255,112,150,0.12); opacity: 1; }
+  .mode-btn[data-mode="companion"].active .label { color: var(--companion); }
+
+  /* ---- MAIN LAYOUT ---- */
+  .main { display: flex; flex: 1; height: calc(100vh - 140px); }
+
+  /* ======================================
+     SIDEBAR
+  ====================================== */
+  .sidebar {
+    width: 300px; min-width: 280px;
+    border-right: 1px solid var(--border);
+    overflow-y: auto; overflow-x: hidden;
+    display: flex; flex-direction: column;
+    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+  }
+
+  /* --- Sessions section (top) --- */
+  .sessions-section {
+    padding: 18px 16px 14px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .sessions-header {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 12px;
+  }
+  .sessions-header h2 {
+    font-family: 'Syne', sans-serif; font-size: 0.75rem;
+    font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .new-session-btn {
+    display: flex; align-items: center; gap: 5px;
+    background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.25);
+    color: var(--accent); border-radius: 8px; padding: 5px 10px;
+    font-size: 0.72rem; font-weight: 600; cursor: pointer;
+    transition: all 0.2s; font-family: 'DM Sans', sans-serif; letter-spacing: 0.02em;
+  }
+  .new-session-btn:hover {
+    background: rgba(201,168,76,0.2); border-color: rgba(201,168,76,0.45);
+    transform: translateY(-1px);
+  }
+  .new-session-btn svg {
+    width: 12px; height: 12px; stroke: currentColor;
+    fill: none; stroke-width: 2.5; stroke-linecap: round;
+  }
+
+  .session-list {
+    display: flex; flex-direction: column; gap: 3px;
+    max-height: 290px; overflow-y: auto;
+    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+  }
+  .session-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; border-radius: 9px; cursor: pointer;
+    transition: background 0.15s; border: 1px solid transparent; position: relative;
+  }
+  .session-item:hover { background: rgba(255,255,255,0.04); }
+  .session-item.active {
+    background: rgba(201,168,76,0.08); border-color: rgba(201,168,76,0.2);
+  }
+  .session-item-icon { font-size: 0.88rem; flex-shrink: 0; opacity: 0.7; }
+  .session-item-body { flex: 1; min-width: 0; }
+  .session-item-title {
+    font-size: 0.8rem; font-weight: 500; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3;
+  }
+  .session-item.active .session-item-title { color: #e8c96a; }
+  .session-item-meta { font-size: 0.65rem; color: var(--muted); margin-top: 1px; }
+  .session-delete-btn {
+    opacity: 0; background: none; border: none;
+    color: var(--muted); cursor: pointer; padding: 2px 5px;
+    border-radius: 4px; transition: all 0.15s; flex-shrink: 0;
+    font-size: 0.72rem; line-height: 1;
+  }
+  .session-item:hover .session-delete-btn { opacity: 1; }
+  .session-delete-btn:hover { background: rgba(239,68,68,0.15); color: #ef4444; }
+  .session-empty {
+    text-align: center; padding: 18px 10px;
+    color: var(--muted); font-size: 0.78rem; line-height: 1.7;
+  }
+
+  /* --- Analysis section (below sessions) --- */
+  .analysis-section {
+    padding: 18px 16px; display: flex; flex-direction: column; gap: 14px;
+  }
+  .analysis-section h2 {
+    font-family: 'Syne', sans-serif; font-size: 0.75rem;
+    font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .analysis-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px;
+  }
+  .analysis-card h3 {
+    font-family: 'Syne', sans-serif; font-size: 0.85rem;
+    font-weight: 600; margin-bottom: 9px;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .analysis-card p, .analysis-card li { font-size: 0.8rem; line-height: 1.65; color: #b0b0c0; }
+  .analysis-card ul { padding-left: 14px; display: flex; flex-direction: column; gap: 4px; }
+  .pill {
+    display: inline-block; font-size: 0.62rem; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 99px; margin-right: 4px; margin-bottom: 4px;
+  }
+  .pill.green { background: rgba(52,211,153,0.15); color: #34d399; }
+  .pill.red   { background: rgba(239,68,68,0.15); color: #ef4444; }
+  .pill.yellow{ background: rgba(251,191,36,0.15); color: #fbbf24; }
+  .pill.blue  { background: rgba(96,165,250,0.15); color: #60a5fa; }
+
+  /* ---- CHAT AREA ---- */
+  .chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .mode-header { padding: 18px 28px 14px; border-bottom: 1px solid var(--border); }
+  .mode-header .mode-title {
+    font-family: 'Syne', sans-serif; font-size: 1.4rem;
+    font-weight: 800; letter-spacing: -0.5px; transition: color 0.3s;
+  }
+  .session-title-display {
+    font-size: 0.77rem; color: var(--muted); margin-top: 3px; display: flex; align-items: center; gap: 5px;
+  }
+  .session-title-display span { color: #9090a8; font-style: italic; }
+  .mode-header .mode-desc { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+
+  .messages {
+    flex: 1; overflow-y: auto; padding: 24px 28px;
+    display: flex; flex-direction: column; gap: 18px;
+    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+  }
+  .msg {
+    max-width: 75%; padding: 13px 17px; border-radius: 16px;
+    font-size: 0.88rem; line-height: 1.65; animation: fadeUp 0.3s ease both;
+  }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .msg.ai {
+    background: var(--surface); border: 1px solid var(--border);
+    align-self: flex-start; border-bottom-left-radius: 4px;
+  }
+  .msg.user {
+    background: linear-gradient(135deg, #c9a84c, #a8852a); align-self: flex-end;
+    border-bottom-right-radius: 4px; color: #0a0800;
+  }
+  .msg .sender {
+    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; margin-bottom: 6px; opacity: 0.6;
+  }
+
+  /* ---- PDF DOWNLOAD BUTTON ---- */
+  .msg.ai .sender-row {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;
+  }
+  .msg.ai .sender-row .sender { margin-bottom: 0; }
+  .msg-download-btn {
+    display: flex; align-items: center; background: transparent; border: none;
+    cursor: pointer; opacity: 0; transition: opacity 0.2s, color 0.2s, background 0.2s;
+    padding: 3px 5px; border-radius: 5px; color: var(--muted);
+    gap: 4px; font-size: 0.62rem; font-family: 'DM Sans', sans-serif; letter-spacing: 0.04em;
+  }
+  .msg.ai:hover .msg-download-btn { opacity: 1; }
+  .msg-download-btn:hover { color: var(--text); background: rgba(255,255,255,0.07); }
+  .msg-download-btn svg {
+    width: 12px; height: 12px; stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;
+  }
+
+  /* ---- MARKDOWN ---- */
+  .msg.ai .md p { margin-bottom: 0.6em; line-height: 1.7; }
+  .msg.ai .md p:last-child { margin-bottom: 0; }
+  .msg.ai .md h1, .msg.ai .md h2, .msg.ai .md h3 { font-family: 'Syne', sans-serif; font-weight: 700; margin: 0.8em 0 0.4em; line-height: 1.3; }
+  .msg.ai .md h1 { font-size: 1.1rem; }
+  .msg.ai .md h2 { font-size: 1rem; }
+  .msg.ai .md h3 { font-size: 0.92rem; color: var(--muted); }
+  .msg.ai .md ul, .msg.ai .md ol { padding-left: 1.4em; margin: 0.4em 0 0.6em; display: flex; flex-direction: column; gap: 3px; }
+  .msg.ai .md li { line-height: 1.65; }
+  .msg.ai .md strong { color: #fff; font-weight: 600; }
+  .msg.ai .md em { font-style: italic; opacity: 0.85; }
+  .msg.ai .md hr { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
+  .msg.ai .md blockquote { border-left: 3px solid var(--accent); padding-left: 12px; margin: 8px 0; opacity: 0.8; font-style: italic; }
+  .msg.ai .md code:not(pre code) { background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.15); border-radius: 5px; padding: 1px 6px; font-size: 0.82em; font-family: 'JetBrains Mono','Fira Code',monospace; color: #e8c96a; }
+  .msg.ai .md pre { margin: 10px 0; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
+  .msg.ai .md pre code { font-size: 0.8rem; line-height: 1.6; display: block; overflow-x: auto; padding: 14px 16px !important; background: #1a1a24 !important; font-family: 'JetBrains Mono','Fira Code',monospace; }
+  .code-header { display: flex; align-items: center; justify-content: space-between; background: #22222e; padding: 6px 14px; font-size: 0.7rem; color: var(--muted); font-family: monospace; letter-spacing: 0.05em; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .copy-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: var(--muted); border-radius: 4px; padding: 2px 8px; font-size: 0.65rem; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+  .copy-btn:hover { background: rgba(255,255,255,0.12); color: var(--text); }
+  .msg.ai .md .katex-display { margin: 10px 0; overflow-x: auto; padding: 8px 0; }
+  .msg.ai .md .katex { font-size: 1.05em; }
+
+  /* ---- INPUT ---- */
+  .input-area { padding: 16px 28px 24px; border-top: 1px solid var(--border); }
+  .input-row { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 10px 10px 10px 20px; transition: border-color 0.3s, box-shadow 0.3s; }
+  .input-row:focus-within { border-color: rgba(201,168,76,0.5); box-shadow: 0 0 0 3px rgba(201,168,76,0.08), 0 0 20px rgba(201,168,76,0.1); }
+  .input-row input { flex: 1; background: none; border: none; outline: none; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; }
+  .input-row input::placeholder { color: var(--muted); }
+  .send-btn { background: linear-gradient(135deg,#c9a84c,#a8852a); border: none; border-radius: 999px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: opacity 0.2s, transform 0.15s; color: #0a0800; font-size: 1rem; font-weight: 700; box-shadow: 0 0 12px rgba(201,168,76,0.3); }
+  .send-btn:hover { opacity: 0.85; transform: scale(1.05); }
+
+  /* ---- MEMORY BAR ---- */
+  .memory-bar { display: flex; align-items: center; gap: 8px; padding: 8px 28px; font-size: 0.72rem; color: var(--muted); border-top: 1px solid var(--border); }
+  .memory-dot { width: 7px; height: 7px; border-radius: 50%; background: #34d399; box-shadow: 0 0 6px #34d399; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  @keyframes goldShimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  @keyframes pdfSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  /* ---- TOAST ---- */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(10px);
+    background: #1e1e2e; border: 1px solid rgba(255,255,255,0.1); color: var(--text);
+    padding: 10px 20px; border-radius: 10px; font-size: 0.82rem;
+    opacity: 0; pointer-events: none; transition: all 0.3s; z-index: 999; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* =============================================
+     COGNITIVE HUB — View Toggle
+  ============================================= */
+  .view-toggle {
+    display: flex; gap: 4px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 99px; padding: 4px;
+  }
+  .view-toggle-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 16px; border-radius: 99px; border: none;
+    background: transparent; color: var(--muted);
+    font-family: 'DM Sans', sans-serif; font-size: 0.78rem;
+    font-weight: 500; cursor: pointer; transition: all 0.2s;
+    letter-spacing: 0.03em;
+  }
+  .view-toggle-btn.active {
+    background: linear-gradient(135deg, #c9a84c, #a8852a); color: #0a0800; font-weight: 600;
+  }
+  .view-toggle-btn svg {
+    width: 13px; height: 13px; stroke: currentColor;
+    fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* Chat / Games wrapper */
+  #chatView  { display: flex; flex: 1; overflow: hidden; }
+  #gamesView { display: none; flex: 1; flex-direction: column; height: calc(100vh - 140px); overflow-y: auto; padding: 32px; gap: 28px; }
+  #gamesView.visible { display: flex; }
+
+  /* =============================================
+     GAMES HUB LAYOUT
+  ============================================= */
+  .hub-header {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .hub-header h1 {
+    font-family: 'Syne', sans-serif; font-size: 1.5rem;
+    font-weight: 800; letter-spacing: -0.5px;
+  }
+  .hub-header h1 span { color: var(--accent); }
+  .hub-header p { font-size: 0.85rem; color: var(--muted); }
+
+  .hub-scores {
+    display: flex; gap: 12px; flex-wrap: wrap;
+  }
+  .score-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 16px;
+    font-size: 0.8rem;
+  }
+  .score-chip-icon { font-size: 1.1rem; }
+  .score-chip-body {}
+  .score-chip-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+  .score-chip-val { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text); }
+
+  .game-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+  }
+  .game-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 18px; overflow: hidden; transition: border-color 0.25s, transform 0.2s;
+    cursor: pointer;
+  }
+  .game-card:hover { transform: translateY(-2px); }
+  .game-card[data-game="pattern"]:hover { border-color: rgba(201,168,76,0.5); }
+  .game-card[data-game="focus"]:hover  { border-color: rgba(255,107,53,0.5); }
+
+  .game-card-banner {
+    height: 120px; display: flex; align-items: center; justify-content: center;
+    font-size: 3rem; position: relative; overflow: hidden;
+  }
+  .game-card[data-game="pattern"] .game-card-banner { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
+  .game-card[data-game="focus"]   .game-card-banner { background: linear-gradient(135deg, #1a0f0a 0%, #2e1010 100%); }
+
+  .game-card-banner-grid {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; opacity: 0.8;
+  }
+  .game-card-banner-grid .mini-tile {
+    width: 22px; height: 22px; border-radius: 5px;
+  }
+
+  .focus-shapes-preview {
+    display: flex; gap: 10px; align-items: center;
+  }
+  .focus-shape-p {
+    width: 26px; height: 26px; border-radius: 4px; opacity: 0.85;
+  }
+  .focus-shape-p.circle { border-radius: 50%; }
+
+  .game-card-body { padding: 18px 20px 20px; }
+  .game-card-title {
+    font-family: 'Syne', sans-serif; font-size: 1rem;
+    font-weight: 700; margin-bottom: 5px; display: flex; align-items: center; gap: 8px;
+  }
+  .game-skill-tag {
+    font-size: 0.6rem; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 2px 8px; border-radius: 99px;
+  }
+  .game-skill-tag.memory  { background: rgba(201,168,76,0.15); color: var(--accent); }
+  .game-skill-tag.spatial { background: rgba(255,107,53,0.15); color: var(--gym); }
+
+  .game-card-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.6; margin-bottom: 14px; }
+  .game-play-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 18px; border-radius: 99px; border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; transition: opacity 0.2s, transform 0.15s;
+  }
+  .game-play-btn:hover { opacity: 0.85; transform: scale(1.03); }
+  .game-card[data-game="pattern"] .game-play-btn { background: var(--accent); color: #fff; }
+  .game-card[data-game="focus"]   .game-play-btn { background: var(--gym); color: #fff; }
+
+  /* =============================================
+     GAME MODAL OVERLAY
+  ============================================= */
+  .game-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(12px); z-index: 200;
+    display: none; align-items: center; justify-content: center;
+  }
+  .game-overlay.open { display: flex; }
+
+  .game-modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 22px; padding: 28px; min-width: 360px; max-width: 520px; width: 100%;
+    position: relative; display: flex; flex-direction: column; gap: 18px;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+  }
+  .game-modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .game-modal-title {
+    font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 700;
+  }
+  .game-close-btn {
+    background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+    border-radius: 8px; width: 32px; height: 32px;
+    color: var(--muted); cursor: pointer; font-size: 1rem; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .game-close-btn:hover { background: rgba(239,68,68,0.15); color: #ef4444; }
+
+  .game-status-bar {
+    display: flex; gap: 10px; align-items: center;
+    background: var(--surface2); border-radius: 10px; padding: 10px 14px;
+    font-size: 0.8rem;
+  }
+  .game-stat { display: flex; flex-direction: column; gap: 1px; flex: 1; }
+  .game-stat-label { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+  .game-stat-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; }
+
+  /* ---- Pattern Recall ---- */
+  #patternGrid {
+    display: grid; gap: 8px;
+    margin: 0 auto;
+  }
+  .ptile {
+    border-radius: 10px; cursor: pointer; transition: transform 0.1s;
+    aspect-ratio: 1; border: 2px solid transparent;
+  }
+  .ptile:active { transform: scale(0.93); }
+  .ptile.lit   { filter: brightness(1.4); border-color: rgba(255,255,255,0.3); }
+  .ptile.wrong { border-color: #ef4444 !important; animation: shake 0.3s ease; }
+  .ptile.correct { border-color: #34d399 !important; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+
+  /* ---- Fast Focus ---- */
+  #focusArena {
+    position: relative; background: var(--surface2);
+    border-radius: 14px; overflow: hidden;
+    min-height: 260px; border: 1px solid var(--border);
+  }
+  .focus-shape {
+    position: absolute; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: transform 0.1s; user-select: none;
+    border-radius: 4px;
+  }
+  .focus-shape.circle  { border-radius: 50%; }
+  .focus-shape.diamond { transform: rotate(45deg); }
+  .focus-shape.diamond:active { transform: rotate(45deg) scale(0.9); }
+  .focus-shape:not(.diamond):active { transform: scale(0.9); }
+  .focus-shape.pop {
+    animation: shapePop 0.18s ease forwards;
+  }
+  @keyframes shapePop { to { transform: scale(0); opacity: 0; } }
+
+  .focus-rule-banner {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px;
+    font-size: 0.82rem; color: var(--text); text-align: center;
+  }
+  .focus-rule-banner strong { color: var(--accent); }
+
+  .game-action-btn {
+    padding: 10px 24px; border-radius: 99px; border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 600;
+    cursor: pointer; transition: opacity 0.2s; background: var(--accent); color: #fff;
+    align-self: center;
+  }
+  .game-action-btn:hover { opacity: 0.85; }
+  .game-action-btn.orange { background: var(--gym); }
+
+  .game-result-panel {
+    background: var(--surface2); border-radius: 14px; padding: 20px;
+    text-align: center; display: flex; flex-direction: column; gap: 10px; align-items: center;
+  }
+  .game-result-panel .result-emoji { font-size: 2.5rem; }
+  .game-result-panel .result-title {
+    font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700;
+  }
+  .game-result-panel .result-sub { font-size: 0.82rem; color: var(--muted); }
+  .game-result-panel .result-hs {
+    font-size: 0.75rem; color: var(--accent);
+    background: rgba(201,168,76,0.1); padding: 4px 12px; border-radius: 99px;
+  }
+
+  /* =============================================
+     AUTH MODAL & OAUTH STYLES
+  ============================================= */
+  #authOverlay {
+    position: fixed; inset: 0; z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(5,5,10,0.82);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    opacity: 0; pointer-events: none; transition: opacity 0.35s ease;
+  }
+  #authOverlay.visible { opacity: 1; pointer-events: auto; }
+  .auth-modal {
+    width: 100%; max-width: 430px;
+    background: rgba(17,15,0,0.97);
+    border: 1px solid rgba(201,168,76,0.3); border-radius: 24px;
+    padding: 36px 34px 30px;
+    box-shadow: 0 0 0 1px rgba(201,168,76,0.05), 0 40px 80px rgba(0,0,0,0.8), 0 0 60px rgba(201,168,76,0.08);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    animation: authSlideIn 0.4s cubic-bezier(0.16,1,0.3,1) both;
+  }
+  @keyframes authSlideIn {
+    from { opacity:0; transform:translateY(18px) scale(0.97); }
+    to   { opacity:1; transform:translateY(0) scale(1); }
+  }
+  .auth-logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1.45rem; letter-spacing:-0.5px; text-align:center; margin-bottom:5px; }
+  .auth-logo span { background: linear-gradient(90deg,#c9a84c,#f5e17a,#c9a84c); background-size:200% auto; -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; animation:goldShimmer 4s linear infinite; }
+  .auth-tagline { text-align:center; font-size:0.78rem; color:var(--muted); margin-bottom:24px; line-height:1.5; }
+  .auth-tabs { display:flex; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:12px; padding:4px; margin-bottom:20px; gap:4px; }
+  .auth-tab { flex:1; padding:8px; border-radius:9px; border:none; background:transparent; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:0.83rem; font-weight:500; cursor:pointer; transition:all 0.2s; }
+  .auth-tab.active { background: linear-gradient(135deg, #c9a84c, #a8852a); color: #0a0800; font-weight:600; }
+  .auth-error { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.25); border-radius:9px; padding:10px 14px; font-size:0.78rem; color:#f87171; margin-bottom:12px; display:none; line-height:1.5; }
+  .auth-success { background:rgba(52,211,153,0.1); border:1px solid rgba(52,211,153,0.25); border-radius:9px; padding:10px 14px; font-size:0.78rem; color:#34d399; margin-bottom:12px; display:none; line-height:1.5; }
+  .oauth-grid { display:flex; flex-direction:column; gap:8px; margin-bottom:4px; }
+  .oauth-btn { display:flex; align-items:center; gap:11px; width:100%; padding:11px 16px; border-radius:12px; border:1px solid rgba(255,255,255,0.09); background:rgba(255,255,255,0.04); color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:500; cursor:pointer; transition:background 0.2s,border-color 0.2s,transform 0.15s; text-align:left; }
+  .oauth-btn:hover { transform:translateY(-1px); }
+  .oauth-btn .oauth-icon { width:20px; height:20px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  .oauth-btn .oauth-label { flex:1; }
+  .oauth-btn .oauth-arrow { opacity:0.3; font-size:0.75rem; transition:opacity 0.2s; }
+  .oauth-btn:hover .oauth-arrow { opacity:0.7; }
+  .oauth-btn.google:hover  { background:rgba(66,133,244,0.1);  border-color:rgba(66,133,244,0.35); }
+  .oauth-btn.github:hover  { background:rgba(240,246,252,0.08); border-color:rgba(240,246,252,0.25); }
+  .oauth-btn.discord:hover { background:rgba(88,101,242,0.12);  border-color:rgba(88,101,242,0.4); }
+  .oauth-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+  .auth-divider { text-align:center; font-size:0.7rem; color:var(--muted); margin:14px 0; position:relative; }
+  .auth-divider span { background:rgba(19,19,26,0.95); padding:0 12px; position:relative; z-index:1; letter-spacing:0.05em; }
+  .auth-divider::before { content:''; position:absolute; left:0; right:0; top:50%; border-top:1px solid var(--border); }
+  .auth-field { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+  .auth-field label { font-size:0.7rem; font-weight:600; letter-spacing:0.07em; text-transform:uppercase; color:var(--muted); }
+  .auth-field input { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:11px; padding:11px 15px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.87rem; outline:none; transition:border-color 0.2s; width:100%; }
+  .auth-field input:focus { border-color:rgba(201,168,76,0.55); box-shadow:0 0 0 3px rgba(201,168,76,0.1); }
+  .auth-field input::placeholder { color:rgba(107,107,126,0.7); }
+  .auth-submit-btn { width:100%; padding:12px; background:linear-gradient(135deg,#c9a84c,#a8852a); border:none; border-radius:12px; color:#fff; font-family:'DM Sans',sans-serif; font-size:0.88rem; font-weight:600; cursor:pointer; transition:opacity 0.2s,transform 0.15s; margin-top:4px; }
+  .auth-submit-btn:hover:not(:disabled) { opacity:0.87; transform:translateY(-1px); }
+  .auth-submit-btn:disabled { opacity:0.5; cursor:not-allowed; }
+  .auth-guest-btn { width:100%; padding:10px; border:1px solid var(--border); border-radius:11px; background:transparent; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:0.81rem; cursor:pointer; transition:all 0.2s; margin-top:8px; }
+  .auth-guest-btn:hover { border-color:rgba(255,255,255,0.15); color:var(--text); }
+  /* Lock overlay */
+  .auth-lock-overlay { position:absolute; inset:0; z-index:10; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; background:rgba(10,10,15,0.72); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); border-radius:inherit; opacity:0; pointer-events:none; transition:opacity 0.3s; }
+  .auth-lock-overlay.visible { opacity:1; pointer-events:auto; }
+  .auth-lock-icon { font-size:2rem; }
+  .auth-lock-text { font-family:'Syne',sans-serif; font-size:0.92rem; font-weight:700; color:var(--text); text-align:center; }
+  .auth-lock-sub { font-size:0.76rem; color:var(--muted); text-align:center; }
+  .auth-lock-btn { padding:9px 22px; background:linear-gradient(135deg,#c9a84c,#a8852a); border:none; border-radius:99px; color:#fff; font-family:'DM Sans',sans-serif; font-size:0.83rem; font-weight:600; cursor:pointer; transition:opacity 0.2s,transform 0.15s; }
+  .auth-lock-btn:hover { opacity:0.87; transform:translateY(-1px); }
+  /* Header user pill */
+  .auth-user-pill { display:flex; align-items:center; gap:8px; background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.2); border-radius:99px; padding:5px 13px 5px 8px; font-size:0.74rem; }
+  .auth-user-pill .avatar { width:22px; height:22px; border-radius:50%; background:linear-gradient(135deg,#c9a84c,#a8852a); display:flex; align-items:center; justify-content:center; font-size:0.64rem; font-weight:700; color:#fff; flex-shrink:0; }
+  .auth-user-pill .email-text { color:#e8c96a; max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .auth-signout-btn { background:none; border:none; color:var(--muted); font-size:0.7rem; cursor:pointer; padding:2px 5px; border-radius:5px; transition:all 0.2s; font-family:'DM Sans',sans-serif; white-space:nowrap; }
+  .auth-signout-btn:hover { color:#ef4444; background:rgba(239,68,68,0.1); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">SeWalk <span>AI</span></div>
+  <div class="view-toggle">
+    <button class="view-toggle-btn active" id="btnChat" onclick="switchView('chat')">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Chat
+    </button>
+    <button class="view-toggle-btn" id="btnGames" onclick="switchView('games')">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
+      Cognitive Hub
+    </button>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div id="guestCounterBadge" style="display:none;font-size:0.72rem;color:var(--muted);background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:99px;padding:5px 12px;">
+      <span id="guestCounterText">10 free msgs left</span>
+    </div>
+    <button id="headerLoginBtn" onclick="openAuthModal()" style="display:flex;align-items:center;gap:6px;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);color:var(--accent);border-radius:99px;padding:7px 16px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      Sign In
+    </button>
+    <div id="headerUserPill" class="auth-user-pill" style="display:none;">
+      <div class="avatar" id="headerAvatar">?</div>
+      <span class="email-text" id="headerEmail"></span>
+      <button class="auth-signout-btn" onclick="authSignOut()">Sign out</button>
+    </div>
+    <button id="themeToggle" onclick="toggleTheme()" title="Toggle dark/light mode" style="background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);color:var(--accent);border-radius:99px;padding:7px 12px;cursor:pointer;font-size:0.85rem;transition:all 0.2s;">🌙</button>
+    <div class="mode-badge" id="headerBadge" style="color:var(--accent);border-color:var(--accent);">Gym Trainer</div>
+  </div>
+</header>
+
+<div class="mode-selector">
+  <button class="mode-btn active" data-mode="gym" onclick="switchMode(this)">
+    <span class="icon">🏋️</span><span class="label">Gym Trainer</span>
+  </button>
+  <button class="mode-btn" data-mode="lib" onclick="switchMode(this)">
+    <span class="icon">📚</span><span class="label">Librarian</span>
+  </button>
+  <button class="mode-btn" data-mode="music" onclick="switchMode(this)">
+    <span class="icon">🎛️</span><span class="label">Producer</span>
+  </button>
+  <button class="mode-btn" data-mode="jee" onclick="switchMode(this)">
+    <span class="icon">⚛️</span><span class="label">JEE Tutor</span>
+  </button>
+  <button class="mode-btn" data-mode="companion" onclick="switchMode(this)">
+    <span class="icon">🌙</span><span class="label">Companion</span>
+  </button>
+</div>
+
+<div id="chatView">
+<div class="main">
+
+  <!-- ===== SIDEBAR ===== -->
+  <div class="sidebar">
+
+    <!-- MY SESSIONS (top priority) -->
+    <div class="sessions-section">
+      <div class="sessions-header">
+        <h2>My Sessions</h2>
+        <button class="new-session-btn" onclick="createNewSession()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Chat
+        </button>
+      </div>
+      <div class="session-list" id="sessionList">
+        <div class="session-empty">No sessions yet.<br/>Start chatting to create one!</div>
+      </div>
+    </div>
+
+    <!-- CRITICAL ANALYSIS (below) -->
+    <div class="analysis-section">
+      <h2>Critical Analysis</h2>
+
+      <div class="analysis-card">
+        <h3>💡 Core Idea Strength</h3>
+        <p>Multi-persona AI with persistent memory per mode is a genuinely differentiated concept. The market mostly offers one-size-fits-all chatbots — mode-specific context is a real gap.</p>
+      </div>
+      <div class="analysis-card">
+        <h3>✅ Strengths</h3>
+        <ul>
+          <li><span class="pill green">Strong</span>Clear niche personas — each mode has a real user base</li>
+          <li><span class="pill green">Strong</span>JEE Tutor is underserved & high-demand in India</li>
+          <li><span class="pill green">Strong</span>Mode-specific memory feels premium vs generic AI</li>
+          <li><span class="pill green">Strong</span>Companion mode creates retention & daily habit</li>
+          <li><span class="pill green">Strong</span>Mode switching = flexibility without losing context</li>
+        </ul>
+      </div>
+      <div class="analysis-card">
+        <h3>⚠️ Critical Risks</h3>
+        <ul>
+          <li><span class="pill red">Hard</span>Long-term memory needs a backend (e.g. Supabase + vector store)</li>
+          <li><span class="pill yellow">Watch</span>Companion mode has ethical/emotional dependency risks</li>
+          <li><span class="pill yellow">Watch</span>JEE accuracy must be very high — errors harm students</li>
+          <li><span class="pill red">Hard</span>Vibe-coding alone won't handle memory persistence</li>
+        </ul>
+      </div>
+      <div class="analysis-card">
+        <h3>🛠️ Build Priorities</h3>
+        <ul>
+          <li><span class="pill blue">V1</span>Mode switcher UI + basic persona prompts</li>
+          <li><span class="pill blue">V1</span>In-session memory (context window)</li>
+          <li><span class="pill blue">V2</span>Persistent memory via DB (per mode, per user)</li>
+          <li><span class="pill blue">V2</span>Auth + user profiles</li>
+          <li><span class="pill blue">V3</span>Cross-mode memory (optional, toggleable)</li>
+        </ul>
+      </div>
+      <div class="analysis-card">
+        <h3>🔑 Key Tech Decisions</h3>
+        <p style="margin-bottom:8px">For vibe-coding, recommended stack:</p>
+        <ul>
+          <li>Frontend: <strong style="color:#f0f0f5">Next.js or Bolt.new</strong></li>
+          <li>AI: <strong style="color:#f0f0f5">Claude API or OpenAI</strong></li>
+          <li>Memory: <strong style="color:#f0f0f5">Supabase (DB) + Mem0 or pgvector</strong></li>
+          <li>Auth: <strong style="color:#f0f0f5">Clerk or Supabase Auth</strong></li>
+        </ul>
+      </div>
+      <div class="analysis-card">
+        <h3>🎯 Monetization Angle</h3>
+        <p>Free tier with 3 modes → Paid unlocks all 5 + unlimited sessions. JEE Tutor alone could be a paid standalone product in India.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CHAT AREA ===== -->
+  <div class="chat-area">
+    <div class="mode-header">
+      <div class="mode-title" id="modeTitle" style="color: var(--gym)">🏋️ Gym Trainer</div>
+      <div class="session-title-display">
+        Session: <span id="currentSessionTitle">New Chat</span>
+      </div>
+      <div class="mode-desc" id="modeDesc">Personalized fitness coaching — remembers your goals, splits, and progress.</div>
+    </div>
+
+    <div class="messages" id="messages"></div>
+
+    <div class="memory-bar">
+      <div class="memory-dot"></div>
+      <span id="memoryBarText">Memory active · Gym Trainer · New Chat</span>
+    </div>
+
+    <div class="input-area" style="position:relative;">
+      <div class="auth-lock-overlay" id="chatLockOverlay">
+        <div class="auth-lock-icon">⚠️</div>
+        <div class="auth-lock-text">Guest Limit Reached</div>
+        <div class="auth-lock-sub">Sign in to get unlimited messages &amp; save your sessions.</div>
+        <button class="auth-lock-btn" onclick="openAuthModal()">Sign In / Sign Up</button>
+      </div>
+      <div class="input-row">
+        <input type="text" id="userInput" placeholder="Ask your Gym Trainer..."
+               onkeydown="if(event.key==='Enter') sendMsg()" />
+        <button class="send-btn" onclick="sendMsg()">↑</button>
+      </div>
+    </div>
+  </div>
+</div><!-- .main -->
+</div><!-- #chatView -->
+
+<!-- =============================================
+     COGNITIVE HUB VIEW
+============================================= -->
+<div id="gamesView">
+
+  <div class="hub-header">
+    <h1>🧠 Cognitive <span>Hub</span></h1>
+    <p>Sharpen your mind between chats — each game secretly trains a core cognitive skill.</p>
+  </div>
+
+  <!-- High Score chips -->
+  <div class="hub-scores">
+    <div class="score-chip">
+      <div class="score-chip-icon">🟣</div>
+      <div class="score-chip-body">
+        <div class="score-chip-label">Pattern Recall · Best</div>
+        <div class="score-chip-val" id="hsPattern">—</div>
+      </div>
+    </div>
+    <div class="score-chip">
+      <div class="score-chip-icon">🟠</div>
+      <div class="score-chip-body">
+        <div class="score-chip-label">Fast Focus · Best</div>
+        <div class="score-chip-val" id="hsFocus">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Cards -->
+  <div class="game-grid">
+
+    <div class="game-card" data-game="pattern" onclick="GameManager.launch('pattern')">
+      <div class="game-card-banner">
+        <div class="game-card-banner-grid" id="cardPreviewPattern">
+          <!-- filled by JS -->
+        </div>
+      </div>
+      <div class="game-card-body">
+        <div class="game-card-title">
+          Pattern Recall
+          <span class="game-skill-tag memory">Working Memory</span>
+        </div>
+        <div class="game-card-desc">A grid of tiles flashes a pattern — memorise it, then replicate it perfectly. Each round adds complexity. Trains your visuospatial working memory.</div>
+        <button class="game-play-btn">▶ Play</button>
+      </div>
+    </div>
+
+    <div class="game-card" data-game="focus" onclick="GameManager.launch('focus')">
+      <div class="game-card-banner">
+        <div class="focus-shapes-preview">
+          <div class="focus-shape-p circle" style="background:#ff6b35;"></div>
+          <div class="focus-shape-p" style="background:#ff6b35;"></div>
+          <div class="focus-shape-p circle" style="background:#c9a84c;"></div>
+          <div class="focus-shape-p" style="background:#ff6b35;"></div>
+        </div>
+      </div>
+      <div class="game-card-body">
+        <div class="game-card-title">
+          Fast Focus
+          <span class="game-skill-tag spatial">Processing Speed</span>
+        </div>
+        <div class="game-card-desc">Shapes appear on screen — quickly tap the odd one out based on a shifting rule (colour, shape, or both). Trains selective attention and cognitive flexibility.</div>
+        <button class="game-play-btn">▶ Play</button>
+      </div>
+    </div>
+
+  </div>
+</div><!-- #gamesView -->
+
+
+
+<!-- =============================================
+     PATTERN RECALL MODAL
+============================================= -->
+<div class="game-overlay" id="overlayPattern">
+  <div class="game-modal">
+    <div class="game-modal-header">
+      <div class="game-modal-title" id="patternModalTitle">Pattern Recall</div>
+      <button class="game-close-btn" onclick="GameManager.close('pattern')">✕</button>
+    </div>
+    <div class="game-status-bar">
+      <div class="game-stat"><div class="game-stat-label">Level</div><div class="game-stat-val" id="patLvl">1</div></div>
+      <div class="game-stat"><div class="game-stat-label">Score</div><div class="game-stat-val" id="patScore">0</div></div>
+      <div class="game-stat"><div class="game-stat-label">Lives</div><div class="game-stat-val" id="patLives">♥ ♥ ♥</div></div>
+    </div>
+    <div id="patternPhaseMsg" style="text-align:center;font-size:0.82rem;color:var(--muted);min-height:20px;"></div>
+    <div id="patternGrid"></div>
+    <div id="patternResult" style="display:none;">
+      <div class="game-result-panel">
+        <div class="result-emoji" id="patResultEmoji">😤</div>
+        <div class="result-title" id="patResultTitle">Game Over</div>
+        <div class="result-sub" id="patResultSub">You reached level 1</div>
+        <div class="result-hs" id="patResultHs"></div>
+        <button class="game-action-btn" onclick="GameManager.restart('pattern')">Play Again</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =============================================
+     FAST FOCUS MODAL
+============================================= -->
+<div class="game-overlay" id="overlayFocus">
+  <div class="game-modal">
+    <div class="game-modal-header">
+      <div class="game-modal-title">Fast Focus</div>
+      <button class="game-close-btn" onclick="GameManager.close('focus')">✕</button>
+    </div>
+    <div class="game-status-bar">
+      <div class="game-stat"><div class="game-stat-label">Score</div><div class="game-stat-val" id="focScore">0</div></div>
+      <div class="game-stat"><div class="game-stat-label">Round</div><div class="game-stat-val" id="focRound">1</div></div>
+      <div class="game-stat"><div class="game-stat-label">Time</div><div class="game-stat-val" id="focTimer">5.0</div></div>
+    </div>
+    <div class="focus-rule-banner" id="focRuleBanner">
+      Find the odd one out by: <strong id="focRuleText">colour</strong>
+    </div>
+    <div id="focusArena"></div>
+    <div id="focusResult" style="display:none;">
+      <div class="game-result-panel">
+        <div class="result-emoji" id="focResultEmoji">⚡</div>
+        <div class="result-title" id="focResultTitle">Time's Up!</div>
+        <div class="result-sub" id="focResultSub">You scored 0</div>
+        <div class="result-hs" id="focResultHs"></div>
+        <button class="game-action-btn orange" onclick="GameManager.restart('focus')">Play Again</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// =============================================
+//  SUPABASE AUTH
+// =============================================
+// ── Theme Toggle ──────────────────────────────────────────
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  const newTheme = isDark ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', newTheme);
+  document.getElementById('themeToggle').textContent = newTheme === 'light' ? '☀️' : '🌙';
+  localStorage.setItem('sewalk-theme', newTheme);
+}
+// Restore saved theme on load
+(function() {
+  const saved = localStorage.getItem('sewalk-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('themeToggle');
+    if (btn) btn.textContent = saved === 'light' ? '☀️' : '🌙';
+  });
+})();
+// ── Supabase Config ───────────────────────────────────────
+// ⚠️ WARNING: These keys are exposed client-side. In production, move to a backend proxy.
+// Supabase anon key is limited by Row-Level Security — make sure RLS is enabled on your tables.
+const SUPABASE_URL = 'https://bytcmnwaqkyvgzjcdfcr.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5dGNtbndhcWt5dmd6amNkZmNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MTI4NTgsImV4cCI6MjA4ODA4ODg1OH0.83Ci3f7oiLLeZMz26vCnfKFk55Ju7MBH6oEpsZrYFaw';
+// Hardcoded Anthropic API key (shared — everyone uses this)
+const ANTHROPIC_API_KEY = null; // Secured in backend
+
+const _supabase = (typeof supabase !== 'undefined')
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+  : null;
+
+let currentUser = null;
+
+if (_supabase) {
+  _supabase.auth.onAuthStateChange((event, session) => {
+    currentUser = session?.user ?? null;
+    updateAuthUI();
+    if (event === 'SIGNED_IN') {
+      closeAuthModal();
+      showToast('✅ Signed in as ' + currentUser.email);
+    }
+    if (event === 'SIGNED_OUT') {
+      guestMsgCount = 0;
+      showToast('👋 Signed out');
+      updateAuthUI();
+    }
+  });
+}
+
+function updateAuthUI() {
+  const loginBtn  = document.getElementById('headerLoginBtn');
+  const userPill  = document.getElementById('headerUserPill');
+  const emailEl   = document.getElementById('headerEmail');
+  const avatarEl  = document.getElementById('headerAvatar');
+  const chatLock  = document.getElementById('chatLockOverlay');
+  const guestBadge = document.getElementById('guestCounterBadge');
+  const guestText  = document.getElementById('guestCounterText');
+  if (!loginBtn) return;
+  if (currentUser) {
+    loginBtn.style.display = 'none';
+    userPill.style.display = 'flex';
+    emailEl.textContent    = currentUser.email;
+    avatarEl.textContent   = currentUser.email[0].toUpperCase();
+    if (guestBadge) guestBadge.style.display = 'none';
+    // Reset guest limit counter when signed in
+    guestMsgCount = 0;
+    if (chatLock) chatLock.classList.remove('visible');
+    // Send any pending message that was queued before auth
+    if (pendingMessage) {
+      const input = document.getElementById('userInput');
+      if (input) {
+        const msg = pendingMessage;
+        pendingMessage = null;
+        input.value = msg;
+        sendMsg();
+      }
+    }
+  } else {
+    loginBtn.style.display = 'flex';
+    userPill.style.display = 'none';
+    if (chatLock) chatLock.classList.remove('visible');
+    // Show guest counter
+    const remaining = GUEST_MSG_LIMIT - guestMsgCount;
+    if (guestBadge && guestText) {
+      guestBadge.style.display = remaining > 0 ? 'block' : 'none';
+      guestText.textContent = `${remaining} free msg${remaining !== 1 ? 's' : ''} left`;
+      guestText.style.color = remaining <= 3 ? '#f87171' : '';
+    }
+  }
+}
+
+async function authOAuth(provider) {
+  if (!_supabase) { showAuthError('Supabase not configured.'); return; }
+  const buttons = document.querySelectorAll('.oauth-btn');
+  buttons.forEach(b => b.disabled = true);
+  // Show loading state on clicked button
+  const btn = document.querySelector(`.oauth-btn.${provider}`);
+  if (btn) {
+    const label = btn.querySelector('.oauth-label');
+    if (label) label.textContent = 'Redirecting…';
+  }
+  hideAuthMessages();
+  const opts = { redirectTo: window.location.href };
+  const { error } = await _supabase.auth.signInWithOAuth({ provider, options: opts });
+  if (error) {
+    buttons.forEach(b => b.disabled = false);
+    if (btn) {
+      const label = btn.querySelector('.oauth-label');
+      if (label) label.textContent = provider === 'google' ? 'Continue with Google' : `Continue with ${provider.charAt(0).toUpperCase()+provider.slice(1)}`;
+    }
+    showAuthError(error.message);
+  }
+}
+
+async function authSignIn() {
+  const email = document.getElementById('siEmail').value.trim();
+  const pass  = document.getElementById('siPassword').value;
+  if (!email || !pass) return showAuthError('Please fill in all fields.');
+  if (!_supabase) return showAuthError('Supabase not configured.');
+  setAuthLoading('signinBtn', true); hideAuthMessages();
+  const { error } = await _supabase.auth.signInWithPassword({ email, password: pass });
+  setAuthLoading('signinBtn', false);
+  if (error) showAuthError(error.message);
+}
+
+async function authSignUp() {
+  const email = document.getElementById('suEmail').value.trim();
+  const pass  = document.getElementById('suPassword').value;
+  if (!email || !pass) return showAuthError('Please fill in all fields.');
+  if (!_supabase) return showAuthError('Supabase not configured.');
+  setAuthLoading('signupBtn', true); hideAuthMessages();
+  const { error } = await _supabase.auth.signUp({ email, password: pass });
+  setAuthLoading('signupBtn', false);
+  if (error) showAuthError(error.message);
+  else showAuthSuccess('✅ Check your email to confirm, then sign in.');
+}
+
+async function authSignOut() {
+  if (!_supabase) return;
+  await _supabase.auth.signOut();
+}
+
+function openAuthModal() {
+  hideAuthMessages();
+  document.getElementById('authOverlay').classList.add('visible');
+}
+function closeAuthModal() {
+  document.getElementById('authOverlay').classList.remove('visible');
+}
+function switchAuthTab(tab) {
+  document.getElementById('formSignIn').style.display = tab === 'signin' ? '' : 'none';
+  document.getElementById('formSignUp').style.display = tab === 'signup' ? '' : 'none';
+  document.getElementById('tabSignIn').classList.toggle('active', tab === 'signin');
+  document.getElementById('tabSignUp').classList.toggle('active', tab === 'signup');
+  hideAuthMessages();
+}
+function showAuthError(msg) {
+  const el = document.getElementById('authError');
+  el.textContent = msg; el.style.display = 'block';
+}
+function showAuthSuccess(msg) {
+  const el = document.getElementById('authSuccess');
+  el.textContent = msg; el.style.display = 'block';
+}
+function hideAuthMessages() {
+  document.getElementById('authError').style.display   = 'none';
+  document.getElementById('authSuccess').style.display = 'none';
+}
+function setAuthLoading(id, loading) {
+  const btn = document.getElementById(id);
+  btn.disabled    = loading;
+  btn.textContent = loading ? 'Please wait…' : (id === 'signinBtn' ? 'Sign In with Email' : 'Create Account');
+}
+
+// Fix #10: Single consolidated DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+  // Auth overlay click-outside to close
+  const overlay = document.getElementById('authOverlay');
+  if (overlay) overlay.addEventListener('click', e => { if (e.target === overlay) closeAuthModal(); });
+
+  if (_supabase) {
+    _supabase.auth.getSession().then(({ data: { session } }) => {
+      currentUser = session?.user ?? null;
+      updateAuthUI();
+    });
+  } else {
+    updateAuthUI();
+  }
+
+  // Card preview for pattern game
+  const p = document.getElementById('cardPreviewPattern');
+  if (p) {
+    const cols = ['#c9a84c','#4ecdc4','#ffca28','#ff7096','#60a5fa','#34d399','#ff6b35','#d4a843','#fb923c'];
+    for (let i = 0; i < 9; i++) {
+      const t = document.createElement('div');
+      t.className = 'mini-tile';
+      t.style.background = [0,2,4,6,8].includes(i) ? cols[i % cols.length] : 'rgba(255,255,255,0.05)';
+      p.appendChild(t);
+    }
+  }
+
+  // Run init after DOM is ready
+  init();
+
+  // Show guest counter on initial load if not signed in
+  if (!currentUser) {
+    const guestBadge = document.getElementById('guestCounterBadge');
+    if (guestBadge) guestBadge.style.display = 'block';
+  }
+});
+</script>
+
+<script>
+// =============================================
+//  STATE
+// =============================================
+let currentMode = 'gym';
+let currentSessionId = null;
+let pendingMessage = null; // stores message queued before auth/API key
+
+// Guest message limit
+const GUEST_MSG_LIMIT = 10;
+let guestMsgCount = 0;
+
+// sessionStore[mode] = { [id]: { id, title, createdAt, messages: [] } }
+const sessionStore = { gym: {}, lib: {}, music: {}, jee: {}, companion: {} };
+
+// =============================================
+//  FIX #5: localStorage-based storage wrapper
+//  (window.storage only exists in Claude sandbox)
+// =============================================
+const storage = {
+  get(key) {
+    try { const v = localStorage.getItem(key); return v !== null ? { value: v } : null; }
+    catch { return null; }
+  },
+  set(key, value) {
+    try { localStorage.setItem(key, value); return { value }; }
+    catch { return null; }
+  },
+  delete(key) {
+    try { localStorage.removeItem(key); return { deleted: true }; }
+    catch { return null; }
+  }
+};
+
+// =============================================
+//  CONSTANTS
+// =============================================
+const systemPrompts = {
+  gym:       "You are an expert gym trainer and fitness coach. You give personalized workout advice, help with exercise form, nutrition, recovery, and programming. You remember the user's fitness goals, current split, and past sessions within this conversation. Be motivating, specific, and practical. Keep responses concise unless the user asks for a full plan.",
+  lib:       "You are a knowledgeable librarian and literary guide. You recommend books, discuss themes and authors, help with reading comprehension, and track what the user has read in this conversation. Be thoughtful, curious, and match your suggestions to their taste. Keep responses warm and concise.",
+  music:     "You are a professional music producer and sound designer. You help with beat-making, mixing, music theory, arrangement, gear, DAW tips, and creative direction. You remember the user's projects and genre preferences in this conversation. Be creative, technical when needed, and encouraging.",
+  jee:       "You are an expert JEE Mains and Advanced tutor. You explain concepts clearly, solve problems step-by-step, cover Physics, Chemistry, and Mathematics, and give exam strategy advice. You remember which topics the student has covered in this conversation. Be accurate, patient, and thorough. Never guess — if unsure, say so.",
+  companion: "You are a warm, thoughtful companion. You listen without judgment, help the user think through problems, offer emotional support, and have genuine conversations. You remember what the user has shared in this conversation. Be empathetic, calm, and authentic. Never be dismissive."
+};
+
+const modes = {
+  gym:       { title: '🏋️ Gym Trainer',   desc: 'Personalized fitness coaching — remembers your goals, splits, and progress.',       color: 'var(--gym)',       icon: '🏋️', placeholder: 'Ask your Gym Trainer...',   greeting: "Hey! I'm your Gym Trainer. What are your fitness goals? I'll remember everything across our sessions." },
+  lib:       { title: '📚 Librarian',      desc: 'Deep reading guidance, book recs, and literary analysis tailored to your taste.',   color: 'var(--lib)',       icon: '📚', placeholder: 'Ask the Librarian...',      greeting: "Welcome! I'm your Librarian. Tell me what you love to read and I'll remember your taste across every visit." },
+  music:     { title: '🎛️ Music Producer', desc: 'Beat-making, mixing, theory, and creative direction for your sound.',               color: 'var(--music)',     icon: '🎛️', placeholder: 'Ask your Producer...',      greeting: "Yo, welcome to the studio! What are you working on? I'll keep track of your projects and sound." },
+  jee:       { title: '⚛️ JEE Tutor',      desc: 'Concept clarity, problem solving, and exam strategy for JEE Mains & Advanced.',    color: 'var(--jee)',       icon: '⚛️', placeholder: 'Ask your JEE Tutor...',     greeting: "Namaste! I'm your JEE Tutor. Which subject shall we tackle — Physics, Chemistry, or Maths? I'll track your progress." },
+  companion: { title: '🌙 Companion',      desc: 'A thoughtful, non-judgmental presence for when you need to think out loud.',         color: 'var(--companion)', icon: '🌙', placeholder: 'Talk to your Companion...', greeting: "Hey, glad you're here. How are you feeling today? I'll always remember what we've talked about." }
+};
+
+// =============================================
+//  STORAGE — multi-session aware
+// =============================================
+async function saveSessionStore(mode) {
+  try {
+    storage.set('sessions:' + mode, JSON.stringify(sessionStore[mode]));
+  } catch(e) { console.warn('Save failed', e); }
+}
+
+async function loadSessionStore(mode) {
+  try {
+    const result = storage.get('sessions:' + mode);
+    if (result && result.value) {
+      const parsed = JSON.parse(result.value);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        sessionStore[mode] = parsed;
+        return;
+      }
+    }
+    // Legacy migration: old flat array → convert into first session
+    try {
+      const legacy = storage.get('chat:' + mode);
+      if (legacy && legacy.value) {
+        const arr = JSON.parse(legacy.value);
+        if (Array.isArray(arr) && arr.length > 0) {
+          const id = genId();
+          sessionStore[mode] = {
+            [id]: { id, title: 'Imported Chat', createdAt: Date.now(), messages: arr }
+          };
+          saveSessionStore(mode);
+          return;
+        }
+      }
+    } catch(_) {}
+    sessionStore[mode] = {};
+  } catch(e) {
+    sessionStore[mode] = {};
+  }
+}
+
+// =============================================
+//  SESSION HELPERS
+// =============================================
+function genId() {
+  return 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+function getSession(mode, id) {
+  return sessionStore[mode]?.[id] || null;
+}
+
+function getSortedSessions(mode) {
+  return Object.values(sessionStore[mode] || {}).sort((a, b) => b.createdAt - a.createdAt);
+}
+
+async function createNewSession() {
+  const id = genId();
+  sessionStore[currentMode][id] = {
+    id, title: 'New Chat', createdAt: Date.now(), messages: []
+  };
+  await saveSessionStore(currentMode);
+  await loadSession(id);
+}
+
+async function loadSession(id) {
+  currentSessionId = id;
+  const session = getSession(currentMode, id);
+  if (!session) return;
+  document.getElementById('currentSessionTitle').textContent = session.title;
+  renderMessages();
+  renderSessionList();
+  updateMemoryBar();
+}
+
+async function autoNameSession(userMessage) {
+  const session = getSession(currentMode, currentSessionId);
+  if (!session || session.title !== 'New Chat') return;
+  const words = userMessage.trim().split(/\s+/).slice(0, 5).join(' ');
+  session.title = words || 'New Chat';
+  document.getElementById('currentSessionTitle').textContent = session.title;
+  await saveSessionStore(currentMode);
+  renderSessionList();
+}
+
+async function deleteSession(id, e) {
+  e.stopPropagation();
+  const wasActive = id === currentSessionId;
+  delete sessionStore[currentMode][id];
+  await saveSessionStore(currentMode);
+
+  if (wasActive) {
+    const remaining = getSortedSessions(currentMode);
+    if (remaining.length > 0) {
+      await loadSession(remaining[0].id);
+    } else {
+      await createNewSession();
+    }
+  } else {
+    renderSessionList();
+  }
+  showToast('Session deleted');
+}
+
+// =============================================
+//  RENDER SESSION LIST
+// =============================================
+function renderSessionList() {
+  const list = document.getElementById('sessionList');
+  const sessions = getSortedSessions(currentMode);
+  const icon = modes[currentMode].icon;
+
+  if (sessions.length === 0) {
+    list.innerHTML = '<div class="session-empty">No sessions yet.<br/>Start chatting to create one!</div>';
+    return;
+  }
+
+  list.innerHTML = sessions.map(s => {
+    const active = s.id === currentSessionId;
+    const msgCount = s.messages.filter(m => m.role === 'user').length;
+    const meta = msgCount === 0 ? 'Empty' : msgCount + ' msg' + (msgCount !== 1 ? 's' : '');
+    return `
+      <div class="session-item${active ? ' active' : ''}" onclick="loadSession('${s.id}')">
+        <div class="session-item-icon">${icon}</div>
+        <div class="session-item-body">
+          <div class="session-item-title" title="${esc(s.title)}">${esc(s.title)}</div>
+          <div class="session-item-meta">${meta} · ${relDate(s.createdAt)}</div>
+        </div>
+        <button class="session-delete-btn" onclick="deleteSession('${s.id}', event)" title="Delete">✕</button>
+      </div>`;
+  }).join('');
+}
+
+function relDate(ts) {
+  const m = Math.floor((Date.now() - ts) / 60000);
+  if (m < 1) return 'Just now';
+  if (m < 60) return m + 'm ago';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + 'h ago';
+  return Math.floor(h / 24) + 'd ago';
+}
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// =============================================
+//  MARKED + HIGHLIGHT SETUP
+// =============================================
+// Fix #8: Removed deprecated marked.setOptions({ highlight }) — was fighting with renderer.code below
+// Using only the renderer.code override which is the correct marked v9+ approach
+marked.use({ breaks: true, gfm: true });
+
+const renderer = new marked.Renderer();
+renderer.code = function(token) {
+  const code = token.text !== undefined ? token.text : (typeof token === 'string' ? token : '');
+  const lang = token.lang || '';
+  const highlighted = lang && hljs.getLanguage(lang)
+    ? hljs.highlight(code, { language: lang }).value
+    : hljs.highlightAuto(code).value;
+  const langLabel = lang || 'code';
+  const escaped = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  return `<div class="code-block-wrap">
+    <div class="code-header">
+      <span>${langLabel}</span>
+      <button class="copy-btn" data-code="${escaped.replace(/\n/g,'&#10;')}" onclick="copyCode(this)">Copy</button>
+    </div>
+    <pre><code class="hljs language-${langLabel}">${highlighted}</code></pre>
+  </div>`;
+};
+marked.use({ renderer });
+
+function copyCode(btn) {
+  const raw = btn.dataset.code || '';
+  // Decode HTML entities back to real characters
+  const txt = document.createElement('textarea');
+  txt.innerHTML = raw;
+  const code = txt.value;
+  navigator.clipboard.writeText(code);
+  btn.textContent = 'Copied!';
+  setTimeout(() => btn.textContent = 'Copy', 2000);
+}
+
+// =============================================
+//  CONTENT RENDERER
+// =============================================
+function renderContent(text) {
+  const html = marked.parse(text);
+  const wrapper = document.createElement('div');
+  wrapper.className = 'md';
+  wrapper.innerHTML = html;
+  renderMathInElement(wrapper, {
+    delimiters: [
+      { left: '$$', right: '$$', display: true },
+      { left: '$',  right: '$',  display: false },
+      { left: '\\(', right: '\\)', display: false },
+      { left: '\\[', right: '\\]', display: true }
+    ],
+    throwOnError: false
+  });
+  return wrapper;
+}
+
+// =============================================
+//  APPEND MESSAGE (DOM)
+// =============================================
+function appendMsg(role, content, label, targetId) {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + (role === 'user' ? 'user' : 'ai');
+
+  if (role === 'user') {
+    const sender = document.createElement('div');
+    sender.className = 'sender';
+    sender.textContent = 'You';
+    div.appendChild(sender);
+    div.appendChild(document.createTextNode(content));
+  } else {
+    const msgId = targetId || ('msg-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7));
+    div.id = msgId;
+
+    const senderRow = document.createElement('div');
+    senderRow.className = 'sender-row';
+    const sender = document.createElement('div');
+    sender.className = 'sender';
+    sender.textContent = label;
+    const dlBtn = document.createElement('button');
+    dlBtn.className = 'msg-download-btn';
+    dlBtn.title = 'Download as PDF';
+    dlBtn.setAttribute('onclick', `downloadMessageAsPDF('${msgId}')`);
+    dlBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF`;
+    senderRow.appendChild(sender);
+    senderRow.appendChild(dlBtn);
+    div.appendChild(senderRow);
+    div.appendChild(renderContent(content));
+  }
+
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+// =============================================
+//  RENDER ALL MESSAGES FOR CURRENT SESSION
+// =============================================
+function renderMessages() {
+  const msgs = document.getElementById('messages');
+  const label = document.querySelector('.mode-btn[data-mode="' + currentMode + '"] .label').textContent;
+  const session = getSession(currentMode, currentSessionId);
+  msgs.innerHTML = '';
+
+  if (!session || session.messages.length === 0) {
+    appendMsg('ai', modes[currentMode].greeting, label);
+  } else {
+    session.messages.forEach(m => appendMsg(m.role, m.content, label));
+  }
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// =============================================
+//  MEMORY BAR
+// =============================================
+function updateMemoryBar() {
+  const label = document.querySelector('.mode-btn[data-mode="' + currentMode + '"] .label').textContent;
+  const session = getSession(currentMode, currentSessionId);
+  const count = session ? session.messages.filter(m => m.role === 'user').length : 0;
+  const total = Object.keys(sessionStore[currentMode]).length;
+  const countStr = count > 0 ? count + ' msg' + (count !== 1 ? 's' : '') : 'Empty';
+  document.getElementById('memoryBarText').textContent =
+    `Memory active · ${label} · ${countStr} · ${total} session${total !== 1 ? 's' : ''}`;
+}
+
+// =============================================
+//  SEND MESSAGE
+// =============================================
+async function sendMsg() {
+  const input = document.getElementById('userInput');
+  const val = input.value.trim();
+  if (!val || input.disabled) return;
+
+  // Guest limit: allow up to GUEST_MSG_LIMIT messages, then prompt sign-in
+  if (!currentUser) {
+    if (guestMsgCount >= GUEST_MSG_LIMIT) {
+      pendingMessage = val;
+      input.value = val;
+      openAuthModal();
+      showToast('⚠️ Guest limit reached — sign in to keep chatting!');
+      return;
+    }
+    // Warn at 7 messages
+    if (guestMsgCount === GUEST_MSG_LIMIT - 3) {
+      showToast(`⚠️ ${GUEST_MSG_LIMIT - guestMsgCount} guest messages left — sign in to save & get unlimited!`);
+    }
+    guestMsgCount++;
+    // Update badge
+    const guestBadge = document.getElementById('guestCounterBadge');
+    const guestText  = document.getElementById('guestCounterText');
+    const remaining  = GUEST_MSG_LIMIT - guestMsgCount;
+    if (guestBadge && guestText) {
+      guestBadge.style.display = remaining > 0 ? 'block' : 'none';
+      guestText.textContent = `${remaining} free msg${remaining !== 1 ? 's' : ''} left`;
+      guestText.style.color = remaining <= 3 ? '#f87171' : '';
+    }
+  }
+
+  const modeLabel = document.querySelector('.mode-btn.active .label').textContent;
+  const msgs = document.getElementById('messages');
+  const session = getSession(currentMode, currentSessionId);
+  if (!session) return;
+
+  const isFirst = session.messages.filter(m => m.role === 'user').length === 0;
+
+  appendMsg('user', val, modeLabel);
+  input.value = '';
+  input.disabled = true;
+
+  session.messages.push({ role: 'user', content: val });
+  if (currentUser) {
+    await saveSessionStore(currentMode);
+  }
+  if (isFirst) await autoNameSession(val);
+  updateMemoryBar();
+
+  // Typing indicator
+  const typingId = 'typing-' + Date.now();
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'msg ai';
+  typingDiv.id = typingId;
+  typingDiv.innerHTML = `<div class="sender-row"><div class="sender">${modeLabel}</div></div><span style="opacity:0.45">Thinking...</span>`;
+  msgs.appendChild(typingDiv);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  try {
+    // 🔒 Secure: calls our Netlify Edge Function — API key never exposed to browser
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: systemPrompts[currentMode],
+        messages: session.messages
+      })
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      const errMsg = errData?.error?.message || `API error ${response.status}`;
+      throw new Error(errMsg);
+    }
+
+    const data = await response.json();
+    const reply = data.content?.[0]?.text || "Sorry, I couldn't respond. Please try again.";
+
+    session.messages.push({ role: 'assistant', content: reply });
+    if (currentUser) {
+      await saveSessionStore(currentMode);
+    }
+    updateMemoryBar();
+
+    const typingEl = document.getElementById(typingId);
+    if (typingEl) {
+      typingEl.innerHTML = '';
+      const senderRow = document.createElement('div');
+      senderRow.className = 'sender-row';
+      const sender = document.createElement('div');
+      sender.className = 'sender';
+      sender.textContent = modeLabel;
+      const dlBtn = document.createElement('button');
+      dlBtn.className = 'msg-download-btn';
+      dlBtn.title = 'Download as PDF';
+      dlBtn.setAttribute('onclick', `downloadMessageAsPDF('${typingId}')`);
+      dlBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF`;
+      senderRow.appendChild(sender);
+      senderRow.appendChild(dlBtn);
+      typingEl.appendChild(senderRow);
+      typingEl.appendChild(renderContent(reply));
+    }
+  } catch (err) {
+    const typingEl = document.getElementById(typingId);
+    const errMsg = err?.message || 'Something went wrong.';
+    if (typingEl) typingEl.innerHTML = `<div class="sender-row"><div class="sender">${modeLabel}</div></div><span style="color:#f87171">⚠️ ${errMsg}</span>`;
+    // Remove the failed user message from session history so it doesn't corrupt context
+    if (session.messages[session.messages.length - 1]?.role === 'user') {
+      session.messages.pop();
+    }
+  }
+
+  input.disabled = false;
+  input.focus();
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// =============================================
+//  SWITCH MODE
+// =============================================
+async function switchMode(btn) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentMode = btn.dataset.mode;
+  const m = modes[currentMode];
+
+  document.getElementById('modeTitle').textContent = m.title;
+  document.getElementById('modeTitle').style.color = m.color;
+  document.getElementById('modeDesc').textContent = m.desc;
+  document.getElementById('headerBadge').textContent = btn.querySelector('.label').textContent;
+  document.getElementById('headerBadge').style.color = m.color;
+  document.getElementById('headerBadge').style.borderColor = m.color;
+  document.getElementById('userInput').placeholder = m.placeholder;
+
+  await loadSessionStore(currentMode);
+  const sessions = getSortedSessions(currentMode);
+  if (sessions.length > 0) {
+    await loadSession(sessions[0].id);
+  } else {
+    await createNewSession();
+  }
+}
+
+// =============================================
+//  PDF DOWNLOAD (sandbox-safe: blob → new tab)
+// =============================================
+async function downloadMessageAsPDF(messageId) {
+  const el = document.getElementById(messageId);
+  if (!el) return;
+
+  const modeName = document.querySelector('.mode-btn.active')?.dataset.mode || 'sewalk';
+  const modeLabel = modes[modeName]?.title || modeName;
+  const session = getSession(modeName, currentSessionId);
+  const sessionTitle = session?.title || 'response';
+  const filename = [modeLabel, sessionTitle]
+    .join(' — ').replace(/[^\w\s—]/gi,'').trim().replace(/\s+/g,'_') + '.pdf';
+
+  const ICON = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+  const origBtn = el.querySelector('.msg-download-btn');
+  const setBtn = (label, spin) => {
+    if (!origBtn) return;
+    origBtn.style.opacity = '1';
+    origBtn.innerHTML = spin
+      ? `<svg viewBox="0 0 24 24" style="animation:pdfSpin 0.8s linear infinite"><circle cx="12" cy="12" r="9" stroke-dasharray="40" stroke-dashoffset="15" fill="none"/></svg>${label}`
+      : `${ICON}${label}`;
+  };
+  setBtn('Rendering…', true);
+
+  const clone = el.cloneNode(true);
+  clone.querySelector('.msg-download-btn')?.remove();
+
+  if (window.renderMathInElement) {
+    renderMathInElement(clone, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false },
+        { left: '\\(', right: '\\)', display: false }, { left: '\\[', right: '\\]', display: true }
+      ],
+      throwOnError: false
+    });
+  }
+
+  clone.querySelectorAll('.katex,.katex-display').forEach(k => { k.style.color='#1a1a2e'; k.style.fontSize='1em'; });
+  clone.querySelectorAll('.katex-html').forEach(k => k.style.color='#1a1a2e');
+  clone.style.cssText = `background:#fff!important;color:#1a1a2e!important;border:none!important;border-radius:0!important;padding:28px 32px!important;max-width:100%!important;font-family:'DM Sans',Georgia,sans-serif!important;font-size:13.5px!important;line-height:1.75!important;animation:none!important;`;
+  clone.querySelector('.sender-row')?.setAttribute('style','display:flex;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #eeeef4;');
+  clone.querySelector('.sender')?.setAttribute('style','color:#888;font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0;opacity:1;');
+  clone.querySelectorAll('p,li,td,th').forEach(e => { if(!e.closest('pre')) e.style.color='#1a1a2e'; });
+  clone.querySelectorAll('h1,h2,h3').forEach(e => e.style.color='#0a0a1a');
+  clone.querySelectorAll('strong').forEach(e => e.style.color='#000');
+  clone.querySelectorAll('blockquote').forEach(e => e.setAttribute('style','border-left:3px solid #c9a84c;padding-left:14px;color:#555;font-style:italic;margin:10px 0;'));
+  clone.querySelectorAll('code:not(pre code)').forEach(e => e.setAttribute('style','background:#f0eeff;border:1px solid #ddd;border-radius:4px;padding:1px 6px;font-size:0.82em;color:#6b3fa0;'));
+  clone.querySelectorAll('pre').forEach(p => p.setAttribute('style','background:#1e1e2e;border-radius:8px;overflow:hidden;margin:10px 0;'));
+  clone.querySelectorAll('.code-header').forEach(c => c.setAttribute('style','background:#16162a;padding:6px 14px;font-size:0.68rem;color:#aaa;'));
+  clone.querySelectorAll('.copy-btn').forEach(c => c.style.display='none');
+
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;width:720px;background:#fff;z-index:-1;';
+  wrapper.appendChild(clone);
+  document.body.appendChild(wrapper);
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+  const opt = {
+    margin: [14,14,14,14], filename,
+    image: { type:'jpeg', quality:0.98 },
+    html2canvas: {
+      scale:2.5, useCORS:true, allowTaint:true, backgroundColor:'#ffffff', logging:false,
+      onclone: doc => {
+        if (!doc.querySelector('link[href*="katex"]')) {
+          const l = doc.createElement('link'); l.rel='stylesheet';
+          l.href='https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css';
+          doc.head.appendChild(l);
+        }
+      }
+    },
+    jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
+  };
+
+  try {
+    setBtn('Opening…', true);
+    const blob = await html2pdf().set(opt).from(clone).output('blob');
+    document.body.removeChild(wrapper);
+    const url = URL.createObjectURL(blob);
+    const tab = window.open(url, '_blank');
+    if (tab) {
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+      setBtn('Opened ✓', false);
+    } else {
+      const a = document.createElement('a');
+      a.href=url; a.download=filename; a.style.display='none';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      setBtn('Saved ✓', false);
+    }
+  } catch(err) {
+    console.error('PDF failed:', err);
+    if (document.body.contains(wrapper)) document.body.removeChild(wrapper);
+    setBtn('Error ✗', false);
+  }
+  setTimeout(() => { if(origBtn){ origBtn.innerHTML=`${ICON}PDF`; origBtn.style.opacity=''; } }, 2500);
+}
+
+// =============================================
+//  TOAST
+// =============================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// =============================================
+//  VIEW SWITCHER
+// =============================================
+function switchView(v) {
+  const isGames = v === 'games';
+  document.getElementById('chatView').style.display = isGames ? 'none' : 'flex';
+  const gv = document.getElementById('gamesView');
+  gv.classList.toggle('visible', isGames);
+  document.getElementById('btnChat').classList.toggle('active', !isGames);
+  document.getElementById('btnGames').classList.toggle('active', isGames);
+  if (isGames) GameManager.refreshScores();
+}
+
+// =============================================
+//  GAME MANAGER
+// =============================================
+const GameManager = (() => {
+
+  // ── High-Score helpers ──────────────────────
+  async function getHS(key) {
+    try {
+      const r = storage.get('hs:' + key);
+      return r ? (parseInt(r.value) || 0) : 0;
+    } catch { return 0; }
+  }
+  async function setHS(key, val) {
+    try { storage.set('hs:' + key, String(val)); } catch {}
+  }
+
+  async function refreshScores() {
+    const p = await getHS('pattern');
+    const f = await getHS('focus');
+    document.getElementById('hsPattern').textContent = p > 0 ? `Level ${p}` : '—';
+    document.getElementById('hsFocus').textContent   = f > 0 ? `${f} pts` : '—';
+  }
+
+  // ── Shared open/close ───────────────────────
+  function open(name) {
+    document.getElementById('overlay' + cap(name)).classList.add('open');
+  }
+  function close(name) {
+    document.getElementById('overlay' + cap(name)).classList.remove('open');
+    if (name === 'pattern') PR.destroy();
+    if (name === 'focus')   FF.destroy();
+    refreshScores();
+  }
+  function launch(name) {
+    if (name === 'pattern') PR.start();
+    if (name === 'focus')   FF.start();
+    open(name);
+  }
+  function restart(name) {
+    if (name === 'pattern') PR.start();
+    if (name === 'focus')   FF.start();
+  }
+  function cap(s) { return s[0].toUpperCase() + s.slice(1); }
+
+  // ─────────────────────────────────────────────
+  //  GAME 1 — Pattern Recall
+  // ─────────────────────────────────────────────
+  const PR = (() => {
+    const COLORS = ['#c9a84c','#4ecdc4','#ffca28','#ff7096','#60a5fa','#34d399'];
+    let level, score, lives, pattern, userPicks, phase, gridSize, tileCount;
+
+    function el(id) { return document.getElementById(id); }
+
+    function start() {
+      level = 1; score = 0; lives = 3;
+      el('patternResult').style.display = 'none';
+      el('patternGrid').style.display   = '';
+      buildCardPreview();
+      nextRound();
+    }
+
+    function buildCardPreview() {
+      const p = document.getElementById('cardPreviewPattern');
+      p.innerHTML = '';
+      const cols = ['#c9a84c','#4ecdc4','#ffca28','#ff7096','#60a5fa','#34d399','#ff6b35','#d4a843','#fb923c'];
+      for (let i = 0; i < 9; i++) {
+        const t = document.createElement('div');
+        t.className = 'mini-tile';
+        t.style.background = Math.random() > 0.5 ? cols[i % cols.length] : 'rgba(255,255,255,0.06)';
+        p.appendChild(t);
+      }
+    }
+
+    function nextRound() {
+      gridSize = Math.min(3 + Math.floor((level - 1) / 3), 5);
+      tileCount = gridSize * gridSize;
+      const litCount = Math.min(2 + level, Math.floor(tileCount * 0.6));
+      pattern = new Set();
+      while (pattern.size < litCount) pattern.add(Math.floor(Math.random() * tileCount));
+
+      updateHUD();
+      buildGrid(false);
+      flashPattern();
+    }
+
+    function buildGrid(interactive) {
+      const g = el('patternGrid');
+      const sz = gridSize <= 3 ? 68 : gridSize <= 4 ? 56 : 46;
+      g.style.cssText = `display:grid;grid-template-columns:repeat(${gridSize},${sz}px);gap:8px;margin:0 auto;width:fit-content;`;
+      g.innerHTML = '';
+      for (let i = 0; i < tileCount; i++) {
+        const t = document.createElement('div');
+        t.className = 'ptile';
+        t.style.cssText = `width:${sz}px;height:${sz}px;background:${COLORS[i % COLORS.length]};opacity:0.18;`;
+        t.dataset.idx = i;
+        if (interactive) t.onclick = () => handlePick(i, t);
+        g.appendChild(t);
+      }
+    }
+
+    function flashPattern() {
+      phase = 'watching';
+      el('patternPhaseMsg').textContent = '👀 Memorise the pattern…';
+      el('patternGrid').style.pointerEvents = 'none';
+      const tiles = el('patternGrid').querySelectorAll('.ptile');
+      const delay = Math.max(350, 800 - level * 40);
+
+      setTimeout(() => {
+        pattern.forEach(idx => {
+          tiles[idx].style.opacity = '1';
+          tiles[idx].classList.add('lit');
+        });
+        const showTime = Math.max(600, 1800 - level * 80);
+        setTimeout(() => {
+          pattern.forEach(idx => {
+            tiles[idx].style.opacity = '0.18';
+            tiles[idx].classList.remove('lit');
+          });
+          startRecall();
+        }, showTime);
+      }, delay);
+    }
+
+    function startRecall() {
+      phase = 'recalling';
+      userPicks = new Set();
+      el('patternPhaseMsg').textContent = `🎯 Tap the ${pattern.size} lit tile${pattern.size>1?'s':''}`;
+      buildGrid(true);
+    }
+
+    function handlePick(idx, tile) {
+      if (phase !== 'recalling') return;
+      if (userPicks.has(idx)) return;
+      userPicks.add(idx);
+
+      if (pattern.has(idx)) {
+        tile.style.opacity = '1';
+        tile.classList.add('lit','correct');
+        if (userPicks.size === pattern.size) {
+          // Perfect!
+          score += level * 10;
+          level++;
+          el('patternPhaseMsg').textContent = '✅ Correct! Next level…';
+          setTimeout(nextRound, 900);
+        }
+      } else {
+        tile.classList.add('wrong');
+        lives--;
+        updateHUD();
+        if (lives <= 0) {
+          setTimeout(endGame, 600);
+        } else {
+          el('patternPhaseMsg').textContent = `❌ Miss! ${lives} ${lives===1?'life':'lives'} left`;
+          setTimeout(() => {
+            tile.classList.remove('wrong');
+            userPicks.delete(idx);
+          }, 500);
+        }
+      }
+    }
+
+    function updateHUD() {
+      el('patLvl').textContent   = level;
+      el('patScore').textContent = score;
+      el('patLives').textContent = '♥ '.repeat(lives).trim() || '—';
+    }
+
+    async function endGame() {
+      el('patternGrid').style.display = 'none';
+      el('patternResult').style.display = '';
+      el('patResultSub').textContent = `You reached level ${level} with ${score} pts`;
+      const hs = await getHS('pattern');
+      const newHS = level > hs;
+      if (newHS) {
+        await setHS('pattern', level);
+        el('patResultEmoji').textContent = '🏆';
+        el('patResultTitle').textContent = 'New Best!';
+        el('patResultHs').textContent = `🎉 New High Score — Level ${level}!`;
+      } else {
+        el('patResultEmoji').textContent = lives <= 0 ? '😤' : '✨';
+        el('patResultTitle').textContent = 'Game Over';
+        el('patResultHs').textContent = `Best: Level ${hs}`;
+      }
+    }
+
+    function destroy() {
+      el('patternGrid').innerHTML = '';
+      el('patternResult').style.display = 'none';
+      el('patternGrid').style.display = '';
+    }
+
+    return { start, destroy };
+  })();
+
+  // ─────────────────────────────────────────────
+  //  GAME 2 — Fast Focus
+  // ─────────────────────────────────────────────
+  const FF = (() => {
+    const SHAPES   = ['circle','square','diamond'];
+    const COLORS   = ['#ff6b35','#c9a84c','#4ecdc4','#ffca28','#ff7096'];
+    const RULES    = ['colour','shape','colour+shape'];
+    const DURATION = 30; // seconds
+
+    let score, round, rule, oddIdx, timer, timerInterval, shapes, animRunning;
+
+    function el(id) { return document.getElementById(id); }
+
+    function start() {
+      score = 0; round = 0;
+      el('focusResult').style.display = 'none';
+      el('focusArena').style.display  = '';
+      el('focusArena').style.pointerEvents = '';
+
+      let t = DURATION;
+      el('focTimer').textContent = t.toFixed(1);
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        t -= 0.1;
+        el('focTimer').textContent = Math.max(0, t).toFixed(1);
+        if (t <= 0) { clearInterval(timerInterval); endGame(); }
+      }, 100);
+
+      nextRound();
+    }
+
+    function nextRound() {
+      round++;
+      rule = RULES[Math.min(Math.floor((round - 1) / 3), RULES.length - 1)];
+      el('focRuleText').textContent = rule;
+      el('focRound').textContent = round;
+      el('focScore').textContent  = score;
+
+      // Build shape set: 5 "same" + 1 odd
+      const count = 6;
+      const sameShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+      const sameColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+      shapes = [];
+
+      for (let i = 0; i < count - 1; i++) {
+        shapes.push({ shape: sameShape, color: sameColor });
+      }
+
+      // Build odd one out depending on rule
+      let oddShape = sameShape, oddColor = sameColor;
+      if (rule === 'colour' || rule === 'colour+shape') {
+        const others = COLORS.filter(c => c !== sameColor);
+        oddColor = others[Math.floor(Math.random() * others.length)];
+      }
+      if (rule === 'shape' || rule === 'colour+shape') {
+        const others = SHAPES.filter(s => s !== sameShape);
+        oddShape = others[Math.floor(Math.random() * others.length)];
+      }
+      shapes.push({ shape: oddShape, color: oddColor });
+      oddIdx = shapes.length - 1;
+
+      // Shuffle
+      for (let i = shapes.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shapes[i], shapes[j]] = [shapes[j], shapes[i]];
+        if (j === oddIdx) oddIdx = i;
+        else if (i === oddIdx) oddIdx = j;
+      }
+
+      renderShapes();
+    }
+
+    function renderShapes() {
+      const arena = el('focusArena');
+      arena.innerHTML = '';
+      const sz = 46;
+      const W = arena.offsetWidth || 420;
+      const H = 260;
+      arena.style.height = H + 'px';
+
+      const positions = [];
+      shapes.forEach((s, i) => {
+        const div = document.createElement('div');
+        div.className = 'focus-shape ' + s.shape;
+        div.style.width  = sz + 'px';
+        div.style.height = sz + 'px';
+        div.style.background = s.color;
+
+        // Non-overlapping random position
+        let x, y, tries = 0;
+        do {
+          x = Math.floor(Math.random() * (W - sz - 16)) + 8;
+          y = Math.floor(Math.random() * (H - sz - 16)) + 8;
+          tries++;
+        } while (tries < 30 && positions.some(p => Math.abs(p.x - x) < sz + 8 && Math.abs(p.y - y) < sz + 8));
+        positions.push({ x, y });
+
+        div.style.left = x + 'px';
+        div.style.top  = y + 'px';
+        div.dataset.idx = i;
+        div.onclick = () => handleClick(i, div);
+        arena.appendChild(div);
+      });
+    }
+
+    function handleClick(idx, div) {
+      if (idx === oddIdx) {
+        // Correct
+        score += 10 + Math.max(0, round - 1) * 2;
+        div.classList.add('pop');
+        setTimeout(nextRound, 200);
+      } else {
+        // Wrong — penalise time by visually flashing arena
+        const arena = el('focusArena');
+        arena.style.background = 'rgba(239,68,68,0.12)';
+        setTimeout(() => { arena.style.background = ''; }, 250);
+      }
+      el('focScore').textContent = score;
+    }
+
+    async function endGame() {
+      el('focusArena').style.display = 'none';
+      el('focusResult').style.display = '';
+      el('focResultSub').textContent = `You scored ${score} points in ${round - 1} rounds`;
+      const hs = await getHS('focus');
+      if (score > hs) {
+        await setHS('focus', score);
+        el('focResultEmoji').textContent = '🏆';
+        el('focResultTitle').textContent = 'New Best!';
+        el('focResultHs').textContent = `🎉 New High Score — ${score} pts!`;
+      } else {
+        el('focResultEmoji').textContent = '⚡';
+        el('focResultTitle').textContent = "Time's Up!";
+        el('focResultHs').textContent = `Best: ${hs} pts`;
+      }
+    }
+
+    function destroy() {
+      clearInterval(timerInterval);
+      el('focusArena').innerHTML = '';
+      el('focusResult').style.display = 'none';
+      el('focusArena').style.display = '';
+    }
+
+    return { start, destroy };
+  })();
+
+  // Card preview is now handled in the consolidated DOMContentLoaded above
+  return { launch, close, restart, refreshScores };
+})();
+
+
+async function init() {
+  await loadSessionStore(currentMode);
+  const sessions = getSortedSessions(currentMode);
+  if (sessions.length > 0) {
+    await loadSession(sessions[0].id);
+  } else {
+    await createNewSession();
+  }
+}
+
+// Init runs inside DOMContentLoaded (defined below in auth script)
+</script>
+
+<div class="toast" id="toast"></div>
+
+<!-- AUTH MODAL -->
+<div id="authOverlay">
+  <div class="auth-modal">
+    <div class="auth-logo">SeWalk <span>AI</span></div>
+    <div class="auth-tagline">Sign in to unlock unlimited chats, save sessions &amp; sync across devices.</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabSignIn" onclick="switchAuthTab('signin')">Sign In</button>
+      <button class="auth-tab" id="tabSignUp" onclick="switchAuthTab('signup')">Create Account</button>
+    </div>
+
+    <div id="authError" class="auth-error"></div>
+    <div id="authSuccess" class="auth-success"></div>
+
+    <!-- OAuth buttons -->
+    <div class="oauth-grid">
+      <button class="oauth-btn google" onclick="authOAuth('google')">
+        <span class="oauth-icon"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.1 33.5 29.6 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l6-6C34.5 6.5 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.7-.2-4z"/><path fill="#34A853" d="M6.3 14.7l7 5.1C15 16.1 19.1 13 24 13c3.1 0 5.8 1.1 7.9 3l6-6C34.5 6.5 29.6 4 24 4c-7.9 0-14.7 4.4-18.7 10.7z"/><path fill="#FBBC05" d="M24 44c5.5 0 10.4-1.9 14.2-5l-6.6-5.4C29.6 35.3 26.9 36 24 36c-5.6 0-10.3-3.6-11.9-8.5l-6.9 5.3C9.1 39.5 16 44 24 44z"/><path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.8 2.3-2.3 4.3-4.3 5.7l6.6 5.4C41.7 36.5 44.5 30.7 44.5 24c0-1.3-.1-2.7-.2-4z"/></svg></span>
+        <span class="oauth-label">Continue with Google</span>
+        <span class="oauth-arrow">→</span>
+      </button>
+    </div>
+
+    <div class="auth-divider"><span>OR</span></div>
+
+    <!-- Email/Password -->
+    <div id="formSignIn">
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="siEmail" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="siPassword" placeholder="Your password" autocomplete="current-password"
+               onkeydown="if(event.key==='Enter') authSignIn()"/>
+      </div>
+      <button class="auth-submit-btn" id="signinBtn" onclick="authSignIn()">Sign In with Email</button>
+    </div>
+    <div id="formSignUp" style="display:none;">
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="suEmail" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="suPassword" placeholder="Min. 6 characters" autocomplete="new-password"
+               onkeydown="if(event.key==='Enter') authSignUp()"/>
+      </div>
+      <button class="auth-submit-btn" id="signupBtn" onclick="authSignUp()">Create Account</button>
+    </div>
+
+    <div class="auth-divider" style="margin-top:16px;"><span>continue without signing in</span></div>
+    <button class="auth-guest-btn" onclick="closeAuthModal()">Continue as guest (10 free messages, no saving)</button>
+  </div>
+</div>
+<!-- API key is hardcoded server-side; modal removed -->
+<script>
+// Stub functions in case any old references remain
+function showApiKeyModal() {}
+function closeApiKeyModal() {}
+function saveApiKey() {}
+</script>
+
+<!-- PWA: inline manifest + service worker -->
+<script>
+// Inline Web App Manifest via blob
+(function() {
+  const manifest = {
+    name: "SeWalk AI",
+    short_name: "SeWalk AI",
+    description: "Your premium multi-persona AI companion",
+    start_url: "./",
+    display: "standalone",
+    background_color: "#0a0800",
+    theme_color: "#c9a84c",
+    orientation: "portrait-primary",
+    icons: [
+      { src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%23c9a84c'/><text y='130' x='28' font-size='115' fill='%230a0800'>✦</text></svg>", sizes: "192x192", type: "image/svg+xml" },
+      { src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23c9a84c'/><text y='360' x='60' font-size='320' fill='%230a0800'>✦</text></svg>", sizes: "512x512", type: "image/svg+xml" }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('link');
+  link.rel = 'manifest'; link.href = url;
+  document.head.appendChild(link);
+})();
+
+// PWA Install prompt
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show a subtle install banner after 30 seconds
+  setTimeout(() => {
+    if (deferredPrompt) showInstallBanner();
+  }, 30000);
+});
+
+function showInstallBanner() {
+  const banner = document.createElement('div');
+  banner.id = 'installBanner';
+  banner.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9998;background:rgba(17,15,0,0.97);border:1px solid rgba(201,168,76,0.35);border-radius:16px;padding:14px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 32px rgba(0,0,0,0.6),0 0 20px rgba(201,168,76,0.1);max-width:340px;width:90%;animation:fadeUp 0.4s ease both;`;
+  banner.innerHTML = `
+    <span style="font-size:1.4rem">✦</span>
+    <div style="flex:1">
+      <div style="font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;color:#e8c96a;">Install SeWalk AI</div>
+      <div style="font-size:0.72rem;color:#7a7060;margin-top:2px;">Add to home screen for the best experience</div>
+    </div>
+    <button onclick="installPWA()" style="background:linear-gradient(135deg,#c9a84c,#a8852a);border:none;border-radius:10px;padding:8px 14px;color:#0a0800;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;">Install</button>
+    <button onclick="document.getElementById('installBanner').remove()" style="background:none;border:none;color:#7a7060;font-size:1.1rem;cursor:pointer;padding:2px 5px;">✕</button>
+  `;
+  document.body.appendChild(banner);
+}
+
+async function installPWA() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  const banner = document.getElementById('installBanner');
+  if (banner) banner.remove();
+  if (outcome === 'accepted') showToast('✦ SeWalk AI installed!');
+}
+
+window.addEventListener('appinstalled', () => {
+  showToast('✦ SeWalk AI installed successfully!');
+  deferredPrompt = null;
+});
+</script>
+
+<!-- Legal Footer -->
+<footer style="text-align:center;padding:16px 20px;border-top:1px solid rgba(201,168,76,0.1);font-size:0.72rem;color:#7a7060;background:rgba(10,8,0,0.8);">
+  © 2026 SeWalk AI · Operated by Soumyadip Bhatt ·
+  <a href="/privacy.html" style="color:#c9a84c;text-decoration:none;">Privacy Policy</a> ·
+  <a href="/terms.html" style="color:#c9a84c;text-decoration:none;">Terms of Service</a> ·
+  <a href="mailto:otedtalks@gmail.com" style="color:#c9a84c;text-decoration:none;">Contact</a>
+</footer>
+</body>
+</html>  /* ---- HEADER ---- */
   header {
     display: flex; align-items: center; justify-content: space-between;
     padding: 18px 32px; border-bottom: 1px solid var(--border);
