@@ -1,0 +1,1227 @@
+// =============================================
+//  SUPABASE AUTH
+// =============================================
+// ── Theme Toggle ──────────────────────────────────────────
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  const newTheme = isDark ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', newTheme);
+  document.getElementById('themeToggle').textContent = newTheme === 'light' ? '☀️' : '🌙';
+  localStorage.setItem('sewalk-theme', newTheme);
+}
+// Restore saved theme on load
+(function() {
+  const saved = localStorage.getItem('sewalk-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('themeToggle');
+    if (btn) btn.textContent = saved === 'light' ? '☀️' : '🌙';
+  });
+})();
+// ── Supabase Config ───────────────────────────────────────
+// ⚠️ WARNING: These keys are exposed client-side. In production, move to a backend proxy.
+// Supabase anon key is limited by Row-Level Security — make sure RLS is enabled on your tables.
+const SUPABASE_URL = 'https://bytcmnwaqkyvgzjcdfcr.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5dGNtbndhcWt5dmd6amNkZmNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MTI4NTgsImV4cCI6MjA4ODA4ODg1OH0.83Ci3f7oiLLeZMz26vCnfKFk55Ju7MBH6oEpsZrYFaw';
+// Hardcoded Anthropic API key (shared — everyone uses this)
+const ANTHROPIC_API_KEY = null; // Secured in backend
+
+const _supabase = (typeof supabase !== 'undefined')
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+  : null;
+
+let currentUser = null;
+
+if (_supabase) {
+  _supabase.auth.onAuthStateChange((event, session) => {
+    currentUser = session?.user ?? null;
+    updateAuthUI();
+    if (event === 'SIGNED_IN') {
+      closeAuthModal();
+      showToast('✅ Signed in as ' + currentUser.email);
+    }
+    if (event === 'SIGNED_OUT') {
+      guestMsgCount = 0;
+      showToast('👋 Signed out');
+      updateAuthUI();
+    }
+  });
+}
+
+function updateAuthUI() {
+  const loginBtn  = document.getElementById('headerLoginBtn');
+  const userPill  = document.getElementById('headerUserPill');
+  const emailEl   = document.getElementById('headerEmail');
+  const avatarEl  = document.getElementById('headerAvatar');
+  const chatLock  = document.getElementById('chatLockOverlay');
+  const guestBadge = document.getElementById('guestCounterBadge');
+  const guestText  = document.getElementById('guestCounterText');
+  if (!loginBtn) return;
+  if (currentUser) {
+    loginBtn.style.display = 'none';
+    userPill.style.display = 'flex';
+    emailEl.textContent    = currentUser.email;
+    avatarEl.textContent   = currentUser.email[0].toUpperCase();
+    if (guestBadge) guestBadge.style.display = 'none';
+    // Reset guest limit counter when signed in
+    guestMsgCount = 0;
+    if (chatLock) chatLock.classList.remove('visible');
+    // Send any pending message that was queued before auth
+    if (pendingMessage) {
+      const input = document.getElementById('userInput');
+      if (input) {
+        const msg = pendingMessage;
+        pendingMessage = null;
+        input.value = msg;
+        sendMsg();
+      }
+    }
+  } else {
+    loginBtn.style.display = 'flex';
+    userPill.style.display = 'none';
+    if (chatLock) chatLock.classList.remove('visible');
+    // Show guest counter
+    const remaining = GUEST_MSG_LIMIT - guestMsgCount;
+    if (guestBadge && guestText) {
+      guestBadge.style.display = remaining > 0 ? 'block' : 'none';
+      guestText.textContent = `${remaining} free msg${remaining !== 1 ? 's' : ''} left`;
+      guestText.style.color = remaining <= 3 ? '#f87171' : '';
+    }
+  }
+}
+
+async function authOAuth(provider) {
+  if (!_supabase) { showAuthError('Supabase not configured.'); return; }
+  const buttons = document.querySelectorAll('.oauth-btn');
+  buttons.forEach(b => b.disabled = true);
+  // Show loading state on clicked button
+  const btn = document.querySelector(`.oauth-btn.${provider}`);
+  if (btn) {
+    const label = btn.querySelector('.oauth-label');
+    if (label) label.textContent = 'Redirecting…';
+  }
+  hideAuthMessages();
+  const opts = { redirectTo: window.location.href };
+  const { error } = await _supabase.auth.signInWithOAuth({ provider, options: opts });
+  if (error) {
+    buttons.forEach(b => b.disabled = false);
+    if (btn) {
+      const label = btn.querySelector('.oauth-label');
+      if (label) label.textContent = provider === 'google' ? 'Continue with Google' : `Continue with ${provider.charAt(0).toUpperCase()+provider.slice(1)}`;
+    }
+    showAuthError(error.message);
+  }
+}
+
+async function authSignIn() {
+  const email = document.getElementById('siEmail').value.trim();
+  const pass  = document.getElementById('siPassword').value;
+  if (!email || !pass) return showAuthError('Please fill in all fields.');
+  if (!_supabase) return showAuthError('Supabase not configured.');
+  setAuthLoading('signinBtn', true); hideAuthMessages();
+  const { error } = await _supabase.auth.signInWithPassword({ email, password: pass });
+  setAuthLoading('signinBtn', false);
+  if (error) showAuthError(error.message);
+}
+
+async function authSignUp() {
+  const email = document.getElementById('suEmail').value.trim();
+  const pass  = document.getElementById('suPassword').value;
+  if (!email || !pass) return showAuthError('Please fill in all fields.');
+  if (!_supabase) return showAuthError('Supabase not configured.');
+  setAuthLoading('signupBtn', true); hideAuthMessages();
+  const { error } = await _supabase.auth.signUp({ email, password: pass });
+  setAuthLoading('signupBtn', false);
+  if (error) showAuthError(error.message);
+  else showAuthSuccess('✅ Check your email to confirm, then sign in.');
+}
+
+async function authSignOut() {
+  if (!_supabase) return;
+  await _supabase.auth.signOut();
+}
+
+function openAuthModal() {
+  hideAuthMessages();
+  document.getElementById('authOverlay').classList.add('visible');
+}
+function closeAuthModal() {
+  document.getElementById('authOverlay').classList.remove('visible');
+}
+function switchAuthTab(tab) {
+  document.getElementById('formSignIn').style.display = tab === 'signin' ? '' : 'none';
+  document.getElementById('formSignUp').style.display = tab === 'signup' ? '' : 'none';
+  document.getElementById('tabSignIn').classList.toggle('active', tab === 'signin');
+  document.getElementById('tabSignUp').classList.toggle('active', tab === 'signup');
+  hideAuthMessages();
+}
+function showAuthError(msg) {
+  const el = document.getElementById('authError');
+  el.textContent = msg; el.style.display = 'block';
+}
+function showAuthSuccess(msg) {
+  const el = document.getElementById('authSuccess');
+  el.textContent = msg; el.style.display = 'block';
+}
+function hideAuthMessages() {
+  document.getElementById('authError').style.display   = 'none';
+  document.getElementById('authSuccess').style.display = 'none';
+}
+function setAuthLoading(id, loading) {
+  const btn = document.getElementById(id);
+  btn.disabled    = loading;
+  btn.textContent = loading ? 'Please wait…' : (id === 'signinBtn' ? 'Sign In with Email' : 'Create Account');
+}
+
+// Fix #10: Single consolidated DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+  // Auth overlay click-outside to close
+  const overlay = document.getElementById('authOverlay');
+  if (overlay) overlay.addEventListener('click', e => { if (e.target === overlay) closeAuthModal(); });
+
+  if (_supabase) {
+    _supabase.auth.getSession().then(({ data: { session } }) => {
+      currentUser = session?.user ?? null;
+      updateAuthUI();
+    });
+  } else {
+    updateAuthUI();
+  }
+
+  // Card preview for pattern game
+  const p = document.getElementById('cardPreviewPattern');
+  if (p) {
+    const cols = ['#c9a84c','#4ecdc4','#ffca28','#ff7096','#60a5fa','#34d399','#ff6b35','#d4a843','#fb923c'];
+    for (let i = 0; i < 9; i++) {
+      const t = document.createElement('div');
+      t.className = 'mini-tile';
+      t.style.background = [0,2,4,6,8].includes(i) ? cols[i % cols.length] : 'rgba(255,255,255,0.05)';
+      p.appendChild(t);
+    }
+  }
+
+  // Run init after DOM is ready
+  init();
+
+  // Show guest counter on initial load if not signed in
+  if (!currentUser) {
+    const guestBadge = document.getElementById('guestCounterBadge');
+    if (guestBadge) guestBadge.style.display = 'block';
+  }
+});
+
+// =============================================
+//  STATE
+// =============================================
+let currentMode = 'gym';
+let currentSessionId = null;
+let pendingMessage = null; // stores message queued before auth/API key
+
+// Guest message limit
+const GUEST_MSG_LIMIT = 10;
+let guestMsgCount = 0;
+
+// sessionStore[mode] = { [id]: { id, title, createdAt, messages: [] } }
+const sessionStore = { gym: {}, lib: {}, music: {}, jee: {}, companion: {} };
+
+// =============================================
+//  FIX #5: localStorage-based storage wrapper
+//  (window.storage only exists in Claude sandbox)
+// =============================================
+const storage = {
+  get(key) {
+    try { const v = localStorage.getItem(key); return v !== null ? { value: v } : null; }
+    catch { return null; }
+  },
+  set(key, value) {
+    try { localStorage.setItem(key, value); return { value }; }
+    catch { return null; }
+  },
+  delete(key) {
+    try { localStorage.removeItem(key); return { deleted: true }; }
+    catch { return null; }
+  }
+};
+
+// =============================================
+//  CONSTANTS
+// =============================================
+const systemPrompts = {
+  gym:       "You are an expert gym trainer and fitness coach. You give personalized workout advice, help with exercise form, nutrition, recovery, and programming. You remember the user's fitness goals, current split, and past sessions within this conversation. Be motivating, specific, and practical. Keep responses concise unless the user asks for a full plan.",
+  lib:       "You are a knowledgeable librarian and literary guide. You recommend books, discuss themes and authors, help with reading comprehension, and track what the user has read in this conversation. Be thoughtful, curious, and match your suggestions to their taste. Keep responses warm and concise.",
+  music:     "You are a professional music producer and sound designer. You help with beat-making, mixing, music theory, arrangement, gear, DAW tips, and creative direction. You remember the user's projects and genre preferences in this conversation. Be creative, technical when needed, and encouraging.",
+  jee:       "You are an expert JEE Mains and Advanced tutor. You explain concepts clearly, solve problems step-by-step, cover Physics, Chemistry, and Mathematics, and give exam strategy advice. You remember which topics the student has covered in this conversation. Be accurate, patient, and thorough. Never guess — if unsure, say so.",
+  companion: "You are a warm, thoughtful companion. You listen without judgment, help the user think through problems, offer emotional support, and have genuine conversations. You remember what the user has shared in this conversation. Be empathetic, calm, and authentic. Never be dismissive."
+};
+
+const modes = {
+  gym:       { title: '🏋️ Gym Trainer',   desc: 'Personalized fitness coaching — remembers your goals, splits, and progress.',       color: 'var(--gym)',       icon: '🏋️', placeholder: 'Ask your Gym Trainer...',   greeting: "Hey! I'm your Gym Trainer. What are your fitness goals? I'll remember everything across our sessions." },
+  lib:       { title: '📚 Librarian',      desc: 'Deep reading guidance, book recs, and literary analysis tailored to your taste.',   color: 'var(--lib)',       icon: '📚', placeholder: 'Ask the Librarian...',      greeting: "Welcome! I'm your Librarian. Tell me what you love to read and I'll remember your taste across every visit." },
+  music:     { title: '🎛️ Music Producer', desc: 'Beat-making, mixing, theory, and creative direction for your sound.',               color: 'var(--music)',     icon: '🎛️', placeholder: 'Ask your Producer...',      greeting: "Yo, welcome to the studio! What are you working on? I'll keep track of your projects and sound." },
+  jee:       { title: '⚛️ JEE Tutor',      desc: 'Concept clarity, problem solving, and exam strategy for JEE Mains & Advanced.',    color: 'var(--jee)',       icon: '⚛️', placeholder: 'Ask your JEE Tutor...',     greeting: "Namaste! I'm your JEE Tutor. Which subject shall we tackle — Physics, Chemistry, or Maths? I'll track your progress." },
+  companion: { title: '🌙 Companion',      desc: 'A thoughtful, non-judgmental presence for when you need to think out loud.',         color: 'var(--companion)', icon: '🌙', placeholder: 'Talk to your Companion...', greeting: "Hey, glad you're here. How are you feeling today? I'll always remember what we've talked about." }
+};
+
+// =============================================
+//  STORAGE — multi-session aware
+// =============================================
+async function saveSessionStore(mode) {
+  try {
+    storage.set('sessions:' + mode, JSON.stringify(sessionStore[mode]));
+  } catch(e) { console.warn('Save failed', e); }
+}
+
+async function loadSessionStore(mode) {
+  try {
+    const result = storage.get('sessions:' + mode);
+    if (result && result.value) {
+      const parsed = JSON.parse(result.value);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        sessionStore[mode] = parsed;
+        return;
+      }
+    }
+    // Legacy migration: old flat array → convert into first session
+    try {
+      const legacy = storage.get('chat:' + mode);
+      if (legacy && legacy.value) {
+        const arr = JSON.parse(legacy.value);
+        if (Array.isArray(arr) && arr.length > 0) {
+          const id = genId();
+          sessionStore[mode] = {
+            [id]: { id, title: 'Imported Chat', createdAt: Date.now(), messages: arr }
+          };
+          saveSessionStore(mode);
+          return;
+        }
+      }
+    } catch(_) {}
+    sessionStore[mode] = {};
+  } catch(e) {
+    sessionStore[mode] = {};
+  }
+}
+
+// =============================================
+//  SESSION HELPERS
+// =============================================
+function genId() {
+  return 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+function getSession(mode, id) {
+  return sessionStore[mode]?.[id] || null;
+}
+
+function getSortedSessions(mode) {
+  return Object.values(sessionStore[mode] || {}).sort((a, b) => b.createdAt - a.createdAt);
+}
+
+async function createNewSession() {
+  const id = genId();
+  sessionStore[currentMode][id] = {
+    id, title: 'New Chat', createdAt: Date.now(), messages: []
+  };
+  await saveSessionStore(currentMode);
+  await loadSession(id);
+}
+
+async function loadSession(id) {
+  currentSessionId = id;
+  const session = getSession(currentMode, id);
+  if (!session) return;
+  document.getElementById('currentSessionTitle').textContent = session.title;
+  renderMessages();
+  renderSessionList();
+  updateMemoryBar();
+}
+
+async function autoNameSession(userMessage) {
+  const session = getSession(currentMode, currentSessionId);
+  if (!session || session.title !== 'New Chat') return;
+  const words = userMessage.trim().split(/\s+/).slice(0, 5).join(' ');
+  session.title = words || 'New Chat';
+  document.getElementById('currentSessionTitle').textContent = session.title;
+  await saveSessionStore(currentMode);
+  renderSessionList();
+}
+
+async function deleteSession(id, e) {
+  e.stopPropagation();
+  const wasActive = id === currentSessionId;
+  delete sessionStore[currentMode][id];
+  await saveSessionStore(currentMode);
+
+  if (wasActive) {
+    const remaining = getSortedSessions(currentMode);
+    if (remaining.length > 0) {
+      await loadSession(remaining[0].id);
+    } else {
+      await createNewSession();
+    }
+  } else {
+    renderSessionList();
+  }
+  showToast('Session deleted');
+}
+
+// =============================================
+//  RENDER SESSION LIST
+// =============================================
+function renderSessionList() {
+  const list = document.getElementById('sessionList');
+  const sessions = getSortedSessions(currentMode);
+  const icon = modes[currentMode].icon;
+
+  if (sessions.length === 0) {
+    list.innerHTML = '<div class="session-empty">No sessions yet.<br/>Start chatting to create one!</div>';
+    return;
+  }
+
+  list.innerHTML = sessions.map(s => {
+    const active = s.id === currentSessionId;
+    const msgCount = s.messages.filter(m => m.role === 'user').length;
+    const meta = msgCount === 0 ? 'Empty' : msgCount + ' msg' + (msgCount !== 1 ? 's' : '');
+    return `
+      <div class="session-item${active ? ' active' : ''}" onclick="loadSession('${s.id}')">
+        <div class="session-item-icon">${icon}</div>
+        <div class="session-item-body">
+          <div class="session-item-title" title="${esc(s.title)}">${esc(s.title)}</div>
+          <div class="session-item-meta">${meta} · ${relDate(s.createdAt)}</div>
+        </div>
+        <button class="session-delete-btn" onclick="deleteSession('${s.id}', event)" title="Delete">✕</button>
+      </div>`;
+  }).join('');
+}
+
+function relDate(ts) {
+  const m = Math.floor((Date.now() - ts) / 60000);
+  if (m < 1) return 'Just now';
+  if (m < 60) return m + 'm ago';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + 'h ago';
+  return Math.floor(h / 24) + 'd ago';
+}
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// =============================================
+//  MARKED + HIGHLIGHT SETUP
+// =============================================
+// Fix #8: Removed deprecated marked.setOptions({ highlight }) — was fighting with renderer.code below
+// Using only the renderer.code override which is the correct marked v9+ approach
+marked.use({ breaks: true, gfm: true });
+
+const renderer = new marked.Renderer();
+renderer.code = function(token) {
+  const code = token.text !== undefined ? token.text : (typeof token === 'string' ? token : '');
+  const lang = token.lang || '';
+  const highlighted = lang && hljs.getLanguage(lang)
+    ? hljs.highlight(code, { language: lang }).value
+    : hljs.highlightAuto(code).value;
+  const langLabel = lang || 'code';
+  const escaped = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  return `<div class="code-block-wrap">
+    <div class="code-header">
+      <span>${langLabel}</span>
+      <button class="copy-btn" data-code="${escaped.replace(/\n/g,'&#10;')}" onclick="copyCode(this)">Copy</button>
+    </div>
+    <pre><code class="hljs language-${langLabel}">${highlighted}</code></pre>
+  </div>`;
+};
+marked.use({ renderer });
+
+function copyCode(btn) {
+  const raw = btn.dataset.code || '';
+  // Decode HTML entities back to real characters
+  const txt = document.createElement('textarea');
+  txt.innerHTML = raw;
+  const code = txt.value;
+  navigator.clipboard.writeText(code);
+  btn.textContent = 'Copied!';
+  setTimeout(() => btn.textContent = 'Copy', 2000);
+}
+
+// =============================================
+//  CONTENT RENDERER
+// =============================================
+function renderContent(text) {
+  const html = marked.parse(text);
+  const wrapper = document.createElement('div');
+  wrapper.className = 'md';
+  wrapper.innerHTML = html;
+  renderMathInElement(wrapper, {
+    delimiters: [
+      { left: '$$', right: '$$', display: true },
+      { left: '$',  right: '$',  display: false },
+      { left: '\\(', right: '\\)', display: false },
+      { left: '\\[', right: '\\]', display: true }
+    ],
+    throwOnError: false
+  });
+  return wrapper;
+}
+
+// =============================================
+//  APPEND MESSAGE (DOM)
+// =============================================
+function appendMsg(role, content, label, targetId) {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + (role === 'user' ? 'user' : 'ai');
+
+  if (role === 'user') {
+    const sender = document.createElement('div');
+    sender.className = 'sender';
+    sender.textContent = 'You';
+    div.appendChild(sender);
+    div.appendChild(document.createTextNode(content));
+  } else {
+    const msgId = targetId || ('msg-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7));
+    div.id = msgId;
+
+    const senderRow = document.createElement('div');
+    senderRow.className = 'sender-row';
+    const sender = document.createElement('div');
+    sender.className = 'sender';
+    sender.textContent = label;
+    const dlBtn = document.createElement('button');
+    dlBtn.className = 'msg-download-btn';
+    dlBtn.title = 'Download as PDF';
+    dlBtn.setAttribute('onclick', `downloadMessageAsPDF('${msgId}')`);
+    dlBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF`;
+    senderRow.appendChild(sender);
+    senderRow.appendChild(dlBtn);
+    div.appendChild(senderRow);
+    div.appendChild(renderContent(content));
+  }
+
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+// =============================================
+//  RENDER ALL MESSAGES FOR CURRENT SESSION
+// =============================================
+function renderMessages() {
+  const msgs = document.getElementById('messages');
+  const label = document.querySelector('.mode-btn[data-mode="' + currentMode + '"] .label').textContent;
+  const session = getSession(currentMode, currentSessionId);
+  msgs.innerHTML = '';
+
+  if (!session || session.messages.length === 0) {
+    appendMsg('ai', modes[currentMode].greeting, label);
+  } else {
+    session.messages.forEach(m => appendMsg(m.role, m.content, label));
+  }
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// =============================================
+//  MEMORY BAR
+// =============================================
+function updateMemoryBar() {
+  const label = document.querySelector('.mode-btn[data-mode="' + currentMode + '"] .label').textContent;
+  const session = getSession(currentMode, currentSessionId);
+  const count = session ? session.messages.filter(m => m.role === 'user').length : 0;
+  const total = Object.keys(sessionStore[currentMode]).length;
+  const countStr = count > 0 ? count + ' msg' + (count !== 1 ? 's' : '') : 'Empty';
+  document.getElementById('memoryBarText').textContent =
+    `Memory active · ${label} · ${countStr} · ${total} session${total !== 1 ? 's' : ''}`;
+}
+
+// =============================================
+//  SEND MESSAGE
+// =============================================
+async function sendMsg() {
+  const input = document.getElementById('userInput');
+  const val = input.value.trim();
+  if (!val || input.disabled) return;
+
+  // Guest limit: allow up to GUEST_MSG_LIMIT messages, then prompt sign-in
+  if (!currentUser) {
+    if (guestMsgCount >= GUEST_MSG_LIMIT) {
+      pendingMessage = val;
+      input.value = val;
+      openAuthModal();
+      showToast('⚠️ Guest limit reached — sign in to keep chatting!');
+      return;
+    }
+    // Warn at 7 messages
+    if (guestMsgCount === GUEST_MSG_LIMIT - 3) {
+      showToast(`⚠️ ${GUEST_MSG_LIMIT - guestMsgCount} guest messages left — sign in to save & get unlimited!`);
+    }
+    guestMsgCount++;
+    // Update badge
+    const guestBadge = document.getElementById('guestCounterBadge');
+    const guestText  = document.getElementById('guestCounterText');
+    const remaining  = GUEST_MSG_LIMIT - guestMsgCount;
+    if (guestBadge && guestText) {
+      guestBadge.style.display = remaining > 0 ? 'block' : 'none';
+      guestText.textContent = `${remaining} free msg${remaining !== 1 ? 's' : ''} left`;
+      guestText.style.color = remaining <= 3 ? '#f87171' : '';
+    }
+  }
+
+  const modeLabel = document.querySelector('.mode-btn.active .label').textContent;
+  const msgs = document.getElementById('messages');
+  const session = getSession(currentMode, currentSessionId);
+  if (!session) return;
+
+  const isFirst = session.messages.filter(m => m.role === 'user').length === 0;
+
+  appendMsg('user', val, modeLabel);
+  input.value = '';
+  input.disabled = true;
+
+  session.messages.push({ role: 'user', content: val });
+  if (currentUser) {
+    await saveSessionStore(currentMode);
+  }
+  if (isFirst) await autoNameSession(val);
+  updateMemoryBar();
+
+  // Typing indicator
+  const typingId = 'typing-' + Date.now();
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'msg ai';
+  typingDiv.id = typingId;
+  typingDiv.innerHTML = `<div class="sender-row"><div class="sender">${modeLabel}</div></div><span style="opacity:0.45">Thinking...</span>`;
+  msgs.appendChild(typingDiv);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  try {
+    // 🔒 Secure: calls our Netlify Edge Function — API key never exposed to browser
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: systemPrompts[currentMode],
+        messages: session.messages
+      })
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      const errMsg = errData?.error?.message || `API error ${response.status}`;
+      throw new Error(errMsg);
+    }
+
+    const data = await response.json();
+    const reply = data.content?.[0]?.text || "Sorry, I couldn't respond. Please try again.";
+
+    session.messages.push({ role: 'assistant', content: reply });
+    if (currentUser) {
+      await saveSessionStore(currentMode);
+    }
+    updateMemoryBar();
+
+    const typingEl = document.getElementById(typingId);
+    if (typingEl) {
+      typingEl.innerHTML = '';
+      const senderRow = document.createElement('div');
+      senderRow.className = 'sender-row';
+      const sender = document.createElement('div');
+      sender.className = 'sender';
+      sender.textContent = modeLabel;
+      const dlBtn = document.createElement('button');
+      dlBtn.className = 'msg-download-btn';
+      dlBtn.title = 'Download as PDF';
+      dlBtn.setAttribute('onclick', `downloadMessageAsPDF('${typingId}')`);
+      dlBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF`;
+      senderRow.appendChild(sender);
+      senderRow.appendChild(dlBtn);
+      typingEl.appendChild(senderRow);
+      typingEl.appendChild(renderContent(reply));
+    }
+  } catch (err) {
+    const typingEl = document.getElementById(typingId);
+    const errMsg = err?.message || 'Something went wrong.';
+    if (typingEl) typingEl.innerHTML = `<div class="sender-row"><div class="sender">${modeLabel}</div></div><span style="color:#f87171">⚠️ ${errMsg}</span>`;
+    // Remove the failed user message from session history so it doesn't corrupt context
+    if (session.messages[session.messages.length - 1]?.role === 'user') {
+      session.messages.pop();
+    }
+  }
+
+  input.disabled = false;
+  input.focus();
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// =============================================
+//  SWITCH MODE
+// =============================================
+async function switchMode(btn) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentMode = btn.dataset.mode;
+  const m = modes[currentMode];
+
+  document.getElementById('modeTitle').textContent = m.title;
+  document.getElementById('modeTitle').style.color = m.color;
+  document.getElementById('modeDesc').textContent = m.desc;
+  document.getElementById('headerBadge').textContent = btn.querySelector('.label').textContent;
+  document.getElementById('headerBadge').style.color = m.color;
+  document.getElementById('headerBadge').style.borderColor = m.color;
+  document.getElementById('userInput').placeholder = m.placeholder;
+
+  await loadSessionStore(currentMode);
+  const sessions = getSortedSessions(currentMode);
+  if (sessions.length > 0) {
+    await loadSession(sessions[0].id);
+  } else {
+    await createNewSession();
+  }
+}
+
+// =============================================
+//  PDF DOWNLOAD (sandbox-safe: blob → new tab)
+// =============================================
+async function downloadMessageAsPDF(messageId) {
+  const el = document.getElementById(messageId);
+  if (!el) return;
+
+  const modeName = document.querySelector('.mode-btn.active')?.dataset.mode || 'sewalk';
+  const modeLabel = modes[modeName]?.title || modeName;
+  const session = getSession(modeName, currentSessionId);
+  const sessionTitle = session?.title || 'response';
+  const filename = [modeLabel, sessionTitle]
+    .join(' — ').replace(/[^\w\s—]/gi,'').trim().replace(/\s+/g,'_') + '.pdf';
+
+  const ICON = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+  const origBtn = el.querySelector('.msg-download-btn');
+  const setBtn = (label, spin) => {
+    if (!origBtn) return;
+    origBtn.style.opacity = '1';
+    origBtn.innerHTML = spin
+      ? `<svg viewBox="0 0 24 24" style="animation:pdfSpin 0.8s linear infinite"><circle cx="12" cy="12" r="9" stroke-dasharray="40" stroke-dashoffset="15" fill="none"/></svg>${label}`
+      : `${ICON}${label}`;
+  };
+  setBtn('Rendering…', true);
+
+  const clone = el.cloneNode(true);
+  clone.querySelector('.msg-download-btn')?.remove();
+
+  if (window.renderMathInElement) {
+    renderMathInElement(clone, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false },
+        { left: '\\(', right: '\\)', display: false }, { left: '\\[', right: '\\]', display: true }
+      ],
+      throwOnError: false
+    });
+  }
+
+  clone.querySelectorAll('.katex,.katex-display').forEach(k => { k.style.color='#1a1a2e'; k.style.fontSize='1em'; });
+  clone.querySelectorAll('.katex-html').forEach(k => k.style.color='#1a1a2e');
+  clone.style.cssText = `background:#fff!important;color:#1a1a2e!important;border:none!important;border-radius:0!important;padding:28px 32px!important;max-width:100%!important;font-family:'DM Sans',Georgia,sans-serif!important;font-size:13.5px!important;line-height:1.75!important;animation:none!important;`;
+  clone.querySelector('.sender-row')?.setAttribute('style','display:flex;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #eeeef4;');
+  clone.querySelector('.sender')?.setAttribute('style','color:#888;font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0;opacity:1;');
+  clone.querySelectorAll('p,li,td,th').forEach(e => { if(!e.closest('pre')) e.style.color='#1a1a2e'; });
+  clone.querySelectorAll('h1,h2,h3').forEach(e => e.style.color='#0a0a1a');
+  clone.querySelectorAll('strong').forEach(e => e.style.color='#000');
+  clone.querySelectorAll('blockquote').forEach(e => e.setAttribute('style','border-left:3px solid #c9a84c;padding-left:14px;color:#555;font-style:italic;margin:10px 0;'));
+  clone.querySelectorAll('code:not(pre code)').forEach(e => e.setAttribute('style','background:#f0eeff;border:1px solid #ddd;border-radius:4px;padding:1px 6px;font-size:0.82em;color:#6b3fa0;'));
+  clone.querySelectorAll('pre').forEach(p => p.setAttribute('style','background:#1e1e2e;border-radius:8px;overflow:hidden;margin:10px 0;'));
+  clone.querySelectorAll('.code-header').forEach(c => c.setAttribute('style','background:#16162a;padding:6px 14px;font-size:0.68rem;color:#aaa;'));
+  clone.querySelectorAll('.copy-btn').forEach(c => c.style.display='none');
+
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;width:720px;background:#fff;z-index:-1;';
+  wrapper.appendChild(clone);
+  document.body.appendChild(wrapper);
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+  const opt = {
+    margin: [14,14,14,14], filename,
+    image: { type:'jpeg', quality:0.98 },
+    html2canvas: {
+      scale:2.5, useCORS:true, allowTaint:true, backgroundColor:'#ffffff', logging:false,
+      onclone: doc => {
+        if (!doc.querySelector('link[href*="katex"]')) {
+          const l = doc.createElement('link'); l.rel='stylesheet';
+          l.href='https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css';
+          doc.head.appendChild(l);
+        }
+      }
+    },
+    jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
+  };
+
+  try {
+    setBtn('Opening…', true);
+    const blob = await html2pdf().set(opt).from(clone).output('blob');
+    document.body.removeChild(wrapper);
+    const url = URL.createObjectURL(blob);
+    const tab = window.open(url, '_blank');
+    if (tab) {
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+      setBtn('Opened ✓', false);
+    } else {
+      const a = document.createElement('a');
+      a.href=url; a.download=filename; a.style.display='none';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      setBtn('Saved ✓', false);
+    }
+  } catch(err) {
+    console.error('PDF failed:', err);
+    if (document.body.contains(wrapper)) document.body.removeChild(wrapper);
+    setBtn('Error ✗', false);
+  }
+  setTimeout(() => { if(origBtn){ origBtn.innerHTML=`${ICON}PDF`; origBtn.style.opacity=''; } }, 2500);
+}
+
+// =============================================
+//  TOAST
+// =============================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// =============================================
+//  VIEW SWITCHER
+// =============================================
+function switchView(v) {
+  const isGames = v === 'games';
+  document.getElementById('chatView').style.display = isGames ? 'none' : 'flex';
+  const gv = document.getElementById('gamesView');
+  gv.classList.toggle('visible', isGames);
+  document.getElementById('btnChat').classList.toggle('active', !isGames);
+  document.getElementById('btnGames').classList.toggle('active', isGames);
+  if (isGames) GameManager.refreshScores();
+}
+
+// =============================================
+//  GAME MANAGER
+// =============================================
+const GameManager = (() => {
+
+  // ── High-Score helpers ──────────────────────
+  async function getHS(key) {
+    try {
+      const r = storage.get('hs:' + key);
+      return r ? (parseInt(r.value) || 0) : 0;
+    } catch { return 0; }
+  }
+  async function setHS(key, val) {
+    try { storage.set('hs:' + key, String(val)); } catch {}
+  }
+
+  async function refreshScores() {
+    const p = await getHS('pattern');
+    const f = await getHS('focus');
+    document.getElementById('hsPattern').textContent = p > 0 ? `Level ${p}` : '—';
+    document.getElementById('hsFocus').textContent   = f > 0 ? `${f} pts` : '—';
+  }
+
+  // ── Shared open/close ───────────────────────
+  function open(name) {
+    document.getElementById('overlay' + cap(name)).classList.add('open');
+  }
+  function close(name) {
+    document.getElementById('overlay' + cap(name)).classList.remove('open');
+    if (name === 'pattern') PR.destroy();
+    if (name === 'focus')   FF.destroy();
+    refreshScores();
+  }
+  function launch(name) {
+    if (name === 'pattern') PR.start();
+    if (name === 'focus')   FF.start();
+    open(name);
+  }
+  function restart(name) {
+    if (name === 'pattern') PR.start();
+    if (name === 'focus')   FF.start();
+  }
+  function cap(s) { return s[0].toUpperCase() + s.slice(1); }
+
+  // ─────────────────────────────────────────────
+  //  GAME 1 — Pattern Recall
+  // ─────────────────────────────────────────────
+  const PR = (() => {
+    const COLORS = ['#c9a84c','#4ecdc4','#ffca28','#ff7096','#60a5fa','#34d399'];
+    let level, score, lives, pattern, userPicks, phase, gridSize, tileCount;
+
+    function el(id) { return document.getElementById(id); }
+
+    function start() {
+      level = 1; score = 0; lives = 3;
+      el('patternResult').style.display = 'none';
+      el('patternGrid').style.display   = '';
+      buildCardPreview();
+      nextRound();
+    }
+
+    function buildCardPreview() {
+      const p = document.getElementById('cardPreviewPattern');
+      p.innerHTML = '';
+      const cols = ['#c9a84c','#4ecdc4','#ffca28','#ff7096','#60a5fa','#34d399','#ff6b35','#d4a843','#fb923c'];
+      for (let i = 0; i < 9; i++) {
+        const t = document.createElement('div');
+        t.className = 'mini-tile';
+        t.style.background = Math.random() > 0.5 ? cols[i % cols.length] : 'rgba(255,255,255,0.06)';
+        p.appendChild(t);
+      }
+    }
+
+    function nextRound() {
+      gridSize = Math.min(3 + Math.floor((level - 1) / 3), 5);
+      tileCount = gridSize * gridSize;
+      const litCount = Math.min(2 + level, Math.floor(tileCount * 0.6));
+      pattern = new Set();
+      while (pattern.size < litCount) pattern.add(Math.floor(Math.random() * tileCount));
+
+      updateHUD();
+      buildGrid(false);
+      flashPattern();
+    }
+
+    function buildGrid(interactive) {
+      const g = el('patternGrid');
+      const sz = gridSize <= 3 ? 68 : gridSize <= 4 ? 56 : 46;
+      g.style.cssText = `display:grid;grid-template-columns:repeat(${gridSize},${sz}px);gap:8px;margin:0 auto;width:fit-content;`;
+      g.innerHTML = '';
+      for (let i = 0; i < tileCount; i++) {
+        const t = document.createElement('div');
+        t.className = 'ptile';
+        t.style.cssText = `width:${sz}px;height:${sz}px;background:${COLORS[i % COLORS.length]};opacity:0.18;`;
+        t.dataset.idx = i;
+        if (interactive) t.onclick = () => handlePick(i, t);
+        g.appendChild(t);
+      }
+    }
+
+    function flashPattern() {
+      phase = 'watching';
+      el('patternPhaseMsg').textContent = '👀 Memorise the pattern…';
+      el('patternGrid').style.pointerEvents = 'none';
+      const tiles = el('patternGrid').querySelectorAll('.ptile');
+      const delay = Math.max(350, 800 - level * 40);
+
+      setTimeout(() => {
+        pattern.forEach(idx => {
+          tiles[idx].style.opacity = '1';
+          tiles[idx].classList.add('lit');
+        });
+        const showTime = Math.max(600, 1800 - level * 80);
+        setTimeout(() => {
+          pattern.forEach(idx => {
+            tiles[idx].style.opacity = '0.18';
+            tiles[idx].classList.remove('lit');
+          });
+          startRecall();
+        }, showTime);
+      }, delay);
+    }
+
+    function startRecall() {
+      phase = 'recalling';
+      userPicks = new Set();
+      el('patternPhaseMsg').textContent = `🎯 Tap the ${pattern.size} lit tile${pattern.size>1?'s':''}`;
+      buildGrid(true);
+    }
+
+    function handlePick(idx, tile) {
+      if (phase !== 'recalling') return;
+      if (userPicks.has(idx)) return;
+      userPicks.add(idx);
+
+      if (pattern.has(idx)) {
+        tile.style.opacity = '1';
+        tile.classList.add('lit','correct');
+        if (userPicks.size === pattern.size) {
+          // Perfect!
+          score += level * 10;
+          level++;
+          el('patternPhaseMsg').textContent = '✅ Correct! Next level…';
+          setTimeout(nextRound, 900);
+        }
+      } else {
+        tile.classList.add('wrong');
+        lives--;
+        updateHUD();
+        if (lives <= 0) {
+          setTimeout(endGame, 600);
+        } else {
+          el('patternPhaseMsg').textContent = `❌ Miss! ${lives} ${lives===1?'life':'lives'} left`;
+          setTimeout(() => {
+            tile.classList.remove('wrong');
+            userPicks.delete(idx);
+          }, 500);
+        }
+      }
+    }
+
+    function updateHUD() {
+      el('patLvl').textContent   = level;
+      el('patScore').textContent = score;
+      el('patLives').textContent = '♥ '.repeat(lives).trim() || '—';
+    }
+
+    async function endGame() {
+      el('patternGrid').style.display = 'none';
+      el('patternResult').style.display = '';
+      el('patResultSub').textContent = `You reached level ${level} with ${score} pts`;
+      const hs = await getHS('pattern');
+      const newHS = level > hs;
+      if (newHS) {
+        await setHS('pattern', level);
+        el('patResultEmoji').textContent = '🏆';
+        el('patResultTitle').textContent = 'New Best!';
+        el('patResultHs').textContent = `🎉 New High Score — Level ${level}!`;
+      } else {
+        el('patResultEmoji').textContent = lives <= 0 ? '😤' : '✨';
+        el('patResultTitle').textContent = 'Game Over';
+        el('patResultHs').textContent = `Best: Level ${hs}`;
+      }
+    }
+
+    function destroy() {
+      el('patternGrid').innerHTML = '';
+      el('patternResult').style.display = 'none';
+      el('patternGrid').style.display = '';
+    }
+
+    return { start, destroy };
+  })();
+
+  // ─────────────────────────────────────────────
+  //  GAME 2 — Fast Focus
+  // ─────────────────────────────────────────────
+  const FF = (() => {
+    const SHAPES   = ['circle','square','diamond'];
+    const COLORS   = ['#ff6b35','#c9a84c','#4ecdc4','#ffca28','#ff7096'];
+    const RULES    = ['colour','shape','colour+shape'];
+    const DURATION = 30; // seconds
+
+    let score, round, rule, oddIdx, timer, timerInterval, shapes, animRunning;
+
+    function el(id) { return document.getElementById(id); }
+
+    function start() {
+      score = 0; round = 0;
+      el('focusResult').style.display = 'none';
+      el('focusArena').style.display  = '';
+      el('focusArena').style.pointerEvents = '';
+
+      let t = DURATION;
+      el('focTimer').textContent = t.toFixed(1);
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        t -= 0.1;
+        el('focTimer').textContent = Math.max(0, t).toFixed(1);
+        if (t <= 0) { clearInterval(timerInterval); endGame(); }
+      }, 100);
+
+      nextRound();
+    }
+
+    function nextRound() {
+      round++;
+      rule = RULES[Math.min(Math.floor((round - 1) / 3), RULES.length - 1)];
+      el('focRuleText').textContent = rule;
+      el('focRound').textContent = round;
+      el('focScore').textContent  = score;
+
+      // Build shape set: 5 "same" + 1 odd
+      const count = 6;
+      const sameShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+      const sameColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+      shapes = [];
+
+      for (let i = 0; i < count - 1; i++) {
+        shapes.push({ shape: sameShape, color: sameColor });
+      }
+
+      // Build odd one out depending on rule
+      let oddShape = sameShape, oddColor = sameColor;
+      if (rule === 'colour' || rule === 'colour+shape') {
+        const others = COLORS.filter(c => c !== sameColor);
+        oddColor = others[Math.floor(Math.random() * others.length)];
+      }
+      if (rule === 'shape' || rule === 'colour+shape') {
+        const others = SHAPES.filter(s => s !== sameShape);
+        oddShape = others[Math.floor(Math.random() * others.length)];
+      }
+      shapes.push({ shape: oddShape, color: oddColor });
+      oddIdx = shapes.length - 1;
+
+      // Shuffle
+      for (let i = shapes.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shapes[i], shapes[j]] = [shapes[j], shapes[i]];
+        if (j === oddIdx) oddIdx = i;
+        else if (i === oddIdx) oddIdx = j;
+      }
+
+      renderShapes();
+    }
+
+    function renderShapes() {
+      const arena = el('focusArena');
+      arena.innerHTML = '';
+      const sz = 46;
+      const W = arena.offsetWidth || 420;
+      const H = 260;
+      arena.style.height = H + 'px';
+
+      const positions = [];
+      shapes.forEach((s, i) => {
+        const div = document.createElement('div');
+        div.className = 'focus-shape ' + s.shape;
+        div.style.width  = sz + 'px';
+        div.style.height = sz + 'px';
+        div.style.background = s.color;
+
+        // Non-overlapping random position
+        let x, y, tries = 0;
+        do {
+          x = Math.floor(Math.random() * (W - sz - 16)) + 8;
+          y = Math.floor(Math.random() * (H - sz - 16)) + 8;
+          tries++;
+        } while (tries < 30 && positions.some(p => Math.abs(p.x - x) < sz + 8 && Math.abs(p.y - y) < sz + 8));
+        positions.push({ x, y });
+
+        div.style.left = x + 'px';
+        div.style.top  = y + 'px';
+        div.dataset.idx = i;
+        div.onclick = () => handleClick(i, div);
+        arena.appendChild(div);
+      });
+    }
+
+    function handleClick(idx, div) {
+      if (idx === oddIdx) {
+        // Correct
+        score += 10 + Math.max(0, round - 1) * 2;
+        div.classList.add('pop');
+        setTimeout(nextRound, 200);
+      } else {
+        // Wrong — penalise time by visually flashing arena
+        const arena = el('focusArena');
+        arena.style.background = 'rgba(239,68,68,0.12)';
+        setTimeout(() => { arena.style.background = ''; }, 250);
+      }
+      el('focScore').textContent = score;
+    }
+
+    async function endGame() {
+      el('focusArena').style.display = 'none';
+      el('focusResult').style.display = '';
+      el('focResultSub').textContent = `You scored ${score} points in ${round - 1} rounds`;
+      const hs = await getHS('focus');
+      if (score > hs) {
+        await setHS('focus', score);
+        el('focResultEmoji').textContent = '🏆';
+        el('focResultTitle').textContent = 'New Best!';
+        el('focResultHs').textContent = `🎉 New High Score — ${score} pts!`;
+      } else {
+        el('focResultEmoji').textContent = '⚡';
+        el('focResultTitle').textContent = "Time's Up!";
+        el('focResultHs').textContent = `Best: ${hs} pts`;
+      }
+    }
+
+    function destroy() {
+      clearInterval(timerInterval);
+      el('focusArena').innerHTML = '';
+      el('focusResult').style.display = 'none';
+      el('focusArena').style.display = '';
+    }
+
+    return { start, destroy };
+  })();
+
+  // Card preview is now handled in the consolidated DOMContentLoaded above
+  return { launch, close, restart, refreshScores };
+})();
+
+
+async function init() {
+  await loadSessionStore(currentMode);
+  const sessions = getSortedSessions(currentMode);
+  if (sessions.length > 0) {
+    await loadSession(sessions[0].id);
+  } else {
+    await createNewSession();
+  }
+}
+
+// Init runs inside DOMContentLoaded (defined below in auth script)
+
+// Stub functions in case any old references remain
+function showApiKeyModal() {}
+function closeApiKeyModal() {}
+function saveApiKey() {}
+
+// Inline Web App Manifest via blob
+(function() {
+  const manifest = {
+    name: "SeWalk AI",
+    short_name: "SeWalk AI",
+    description: "Your premium multi-persona AI companion",
+    start_url: "./",
+    display: "standalone",
+    background_color: "#0a0800",
+    theme_color: "#c9a84c",
+    orientation: "portrait-primary",
+    icons: [
+      { src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%23c9a84c'/><text y='130' x='28' font-size='115' fill='%230a0800'>✦</text></svg>", sizes: "192x192", type: "image/svg+xml" },
+      { src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23c9a84c'/><text y='360' x='60' font-size='320' fill='%230a0800'>✦</text></svg>", sizes: "512x512", type: "image/svg+xml" }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('link');
+  link.rel = 'manifest'; link.href = url;
+  document.head.appendChild(link);
+})();
+
+// PWA Install prompt
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show a subtle install banner after 30 seconds
+  setTimeout(() => {
+    if (deferredPrompt) showInstallBanner();
+  }, 30000);
+});
+
+function showInstallBanner() {
+  const banner = document.createElement('div');
+  banner.id = 'installBanner';
+  banner.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9998;background:rgba(17,15,0,0.97);border:1px solid rgba(201,168,76,0.35);border-radius:16px;padding:14px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 32px rgba(0,0,0,0.6),0 0 20px rgba(201,168,76,0.1);max-width:340px;width:90%;animation:fadeUp 0.4s ease both;`;
+  banner.innerHTML = `
+    <span style="font-size:1.4rem">✦</span>
+    <div style="flex:1">
+      <div style="font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;color:#e8c96a;">Install SeWalk AI</div>
+      <div style="font-size:0.72rem;color:#7a7060;margin-top:2px;">Add to home screen for the best experience</div>
+    </div>
+    <button onclick="installPWA()" style="background:linear-gradient(135deg,#c9a84c,#a8852a);border:none;border-radius:10px;padding:8px 14px;color:#0a0800;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;">Install</button>
+    <button onclick="document.getElementById('installBanner').remove()" style="background:none;border:none;color:#7a7060;font-size:1.1rem;cursor:pointer;padding:2px 5px;">✕</button>
+  `;
+  document.body.appendChild(banner);
+}
+
+async function installPWA() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  const banner = document.getElementById('installBanner');
+  if (banner) banner.remove();
+  if (outcome === 'accepted') showToast('✦ SeWalk AI installed!');
+}
+
+window.addEventListener('appinstalled', () => {
+  showToast('✦ SeWalk AI installed successfully!');
+  deferredPrompt = null;
+});
