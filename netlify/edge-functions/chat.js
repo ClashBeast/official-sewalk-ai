@@ -1,5 +1,5 @@
 // SeWalk AI — Netlify Edge Function
-// Fixed: correct model name, CORS preflight, robust error handling
+// Updated: added multimodal image support for Gemini
 const ALLOWED_ORIGINS = [
   'https://sewalk-ai-app.netlify.app',
   'https://sewalk-ai-0e0188.netlify.app',
@@ -37,12 +37,32 @@ export default async (request) => {
     if (!apiKey) {
       throw new Error('GEMINI_API_KEY is not set in Netlify environment variables.');
     }
+
+    // Build conversation history
     const contents = (body.messages || [])
       .filter(msg => msg.role !== 'system')
       .map(msg => ({
         role: msg.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: msg.content }],
       }));
+
+    // If image is attached, replace the last user message with multimodal content
+    if (body.image && body.image.base64) {
+      const imagePart = {
+        inline_data: {
+          mime_type: body.image.mime || 'image/jpeg',
+          data: body.image.base64
+        }
+      };
+      const textPart = { text: body.imageText || 'Please analyse this image.' };
+      // Replace last user turn with image + text
+      if (contents.length > 0 && contents[contents.length - 1].role === 'user') {
+        contents[contents.length - 1].parts = [imagePart, textPart];
+      } else {
+        contents.push({ role: 'user', parts: [imagePart, textPart] });
+      }
+    }
+
     const MODEL = 'gemini-3.1-flash-lite-preview';
     const geminiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`,
