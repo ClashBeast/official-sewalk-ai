@@ -536,6 +536,68 @@ function updateMemoryBar() {
 // =============================================
 //  SEND MESSAGE
 // =============================================
+// ── Regenerate Response ───────────────────────────────
+async function regenResponse(msgId) {
+  const session = getSession(currentMode, currentSessionId);
+  if (!session) return;
+
+  // Remove last assistant message from history
+  if (session.messages[session.messages.length - 1]?.role === 'assistant') {
+    session.messages.pop();
+  }
+
+  const modeLabel = document.querySelector('.mode-btn.active .label').textContent;
+  const msgEl = document.getElementById(msgId);
+  if (!msgEl) return;
+
+  // Show thinking state
+  msgEl.innerHTML = `<div class="sender-row"><div class="sender">${modeLabel}</div></div><span style="opacity:0.45">Thinking...</span>`;
+
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: systemPrompts[currentMode],
+        messages: session.messages
+      })
+    });
+
+    if (!response.ok) throw new Error(`API error ${response.status}`);
+    const data = await response.json();
+    const reply = data.content?.[0]?.text || "Sorry, I couldn't respond. Please try again.";
+
+    session.messages.push({ role: 'assistant', content: reply });
+    if (currentUser) await saveSessionStore(currentMode);
+
+    // Re-render the message
+    msgEl.innerHTML = '';
+    const senderRow = document.createElement('div');
+    senderRow.className = 'sender-row';
+    const sender = document.createElement('div');
+    sender.className = 'sender';
+    sender.textContent = modeLabel;
+    const dlBtn = document.createElement('button');
+    dlBtn.className = 'msg-download-btn';
+    dlBtn.title = 'Download as PDF';
+    dlBtn.setAttribute('onclick', `downloadMessageAsPDF('${msgId}')`);
+    dlBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF`;
+    const regenBtn = document.createElement('button');
+    regenBtn.className = 'msg-regen-btn';
+    regenBtn.title = 'Regenerate response';
+    regenBtn.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>`;
+    regenBtn.onclick = () => regenResponse(msgId);
+    senderRow.appendChild(sender);
+    senderRow.appendChild(dlBtn);
+    senderRow.appendChild(regenBtn);
+    msgEl.appendChild(senderRow);
+    msgEl.appendChild(renderContent(reply));
+
+  } catch (err) {
+    msgEl.innerHTML = `<div class="sender-row"><div class="sender">${modeLabel}</div></div><span style="color:#f87171">⚠️ ${err.message}</span>`;
+  }
+}
+
 // ── Image Upload State ────────────────────────────────
 let pendingImageBase64 = null;
 let pendingImageMime = null;
@@ -702,8 +764,14 @@ async function sendMsg() {
       dlBtn.title = 'Download as PDF';
       dlBtn.setAttribute('onclick', `downloadMessageAsPDF('${typingId}')`);
       dlBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF`;
+      const regenBtn = document.createElement('button');
+      regenBtn.className = 'msg-regen-btn';
+      regenBtn.title = 'Regenerate response';
+      regenBtn.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>`;
+      regenBtn.onclick = () => regenResponse(typingId);
       senderRow.appendChild(sender);
       senderRow.appendChild(dlBtn);
+      senderRow.appendChild(regenBtn);
       typingEl.appendChild(senderRow);
       typingEl.appendChild(renderContent(reply));
     }
