@@ -171,6 +171,56 @@
       <span id="memoryBarText">Memory active · Gym Trainer · New Chat</span>
     </div>
 
+    <!-- JEE Calculator Panel — hidden by default -->
+    <div id="jeeCalcPanel" style="display:none;">
+      <div class="jee-calc">
+        <div class="jee-calc-screen">
+          <div class="jee-calc-expr" id="calcExpr"></div>
+          <div class="jee-calc-display" id="calcDisplay">0</div>
+        </div>
+        <div class="jee-calc-btns">
+          <!-- Row 1 -->
+          <button class="calc-btn calc-fn" onclick="calcFn('sin')">sin</button>
+          <button class="calc-btn calc-fn" onclick="calcFn('cos')">cos</button>
+          <button class="calc-btn calc-fn" onclick="calcFn('tan')">tan</button>
+          <button class="calc-btn calc-fn" onclick="calcFn('log')">log</button>
+          <button class="calc-btn calc-fn" onclick="calcFn('sqrt')">√</button>
+          <!-- Row 2 -->
+          <button class="calc-btn calc-fn" onclick="calcInput('Math.PI')">π</button>
+          <button class="calc-btn calc-fn" onclick="calcInput('Math.E')">e</button>
+          <button class="calc-btn calc-fn" onclick="calcInput('**2')">x²</button>
+          <button class="calc-btn calc-fn" onclick="calcInput('**3')">x³</button>
+          <button class="calc-btn calc-fn" onclick="calcInput('**')">xⁿ</button>
+          <!-- Row 3 -->
+          <button class="calc-btn calc-fn" onclick="calcInput('(')">(</button>
+          <button class="calc-btn calc-fn" onclick="calcInput(')')">)</button>
+          <button class="calc-btn calc-fn" onclick="calcInput('%')">%</button>
+          <button class="calc-btn calc-clear" onclick="calcClear()">C</button>
+          <button class="calc-btn calc-op" onclick="calcBackspace()">⌫</button>
+          <!-- Row 4 -->
+          <button class="calc-btn" onclick="calcInput('7')">7</button>
+          <button class="calc-btn" onclick="calcInput('8')">8</button>
+          <button class="calc-btn" onclick="calcInput('9')">9</button>
+          <button class="calc-btn calc-op" onclick="calcInput('/')">÷</button>
+          <button class="calc-btn calc-op" onclick="calcInput('*')">×</button>
+          <!-- Row 5 -->
+          <button class="calc-btn" onclick="calcInput('4')">4</button>
+          <button class="calc-btn" onclick="calcInput('5')">5</button>
+          <button class="calc-btn" onclick="calcInput('6')">6</button>
+          <button class="calc-btn calc-op" onclick="calcInput('-')">−</button>
+          <button class="calc-btn calc-op" onclick="calcInput('+')">+</button>
+          <!-- Row 6 -->
+          <button class="calc-btn" onclick="calcInput('1')">1</button>
+          <button class="calc-btn" onclick="calcInput('2')">2</button>
+          <button class="calc-btn" onclick="calcInput('3')">3</button>
+          <button class="calc-btn" onclick="calcInput('0')">0</button>
+          <button class="calc-btn" onclick="calcInput('.')">.</button>
+          <!-- Row 7 — equals full width -->
+          <button class="calc-btn calc-eq" onclick="calcEquals()" style="grid-column:span 5;">=</button>
+        </div>
+      </div>
+    </div>
+
     <div class="input-area" style="position:relative;">
       <div class="auth-lock-overlay" id="chatLockOverlay">
         <div class="auth-lock-icon">⚠️</div>
@@ -186,6 +236,9 @@
         <input type="file" id="imageUploadInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)"/>
         <input type="text" id="userInput" placeholder="Ask your Gym Trainer..."
                onkeydown="if(event.key==='Enter') sendMsg()" />
+        <button id="calcToggleBtn" class="calc-toggle-btn" onclick="toggleCalc()" title="Calculator" style="display:none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/><line x1="14" y1="18" x2="16" y2="18"/></svg>
+        </button>
         <button class="send-btn" onclick="sendMsg()">↑</button>
       </div>
     </div>
