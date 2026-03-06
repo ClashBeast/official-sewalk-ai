@@ -405,23 +405,22 @@
   .score-chip-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
   .score-chip-val { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text); }
 
-  /* ── Game Grid: uniform matrix layout ── */
+  /* ── Game Grid: 4 columns × 2 rows of perfect squares ── */
   .game-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: auto;
+    gap: 20px;
   }
-  @media (max-width: 900px) {
-    .game-grid { grid-template-columns: repeat(2, 1fr); }
-  }
-  @media (max-width: 560px) {
-    .game-grid { grid-template-columns: 1fr; }
+  @media (max-width: 720px) {
+    .game-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   }
 
   .game-card {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 18px; overflow: hidden; transition: border-color 0.25s, transform 0.2s;
     cursor: pointer; display: flex; flex-direction: column;
+    aspect-ratio: 1 / 1;
   }
   .game-card:hover { transform: translateY(-2px); }
   .game-card[data-game="pattern"]:hover  { border-color: rgba(201,168,76,0.5); }
@@ -435,7 +434,7 @@
 
   /* ── Uniform banner for ALL game cards ── */
   .game-card-banner {
-    height: 90px; display: flex; align-items: center; justify-content: center;
+    height: 80px; display: flex; align-items: center; justify-content: center;
     font-size: 2.2rem; position: relative; overflow: hidden; flex-shrink: 0;
   }
   .game-card[data-game="pattern"]   .game-card-banner { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
