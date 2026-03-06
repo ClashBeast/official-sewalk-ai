@@ -665,3 +665,70 @@
     max-width: 220px; border-radius: 12px; margin-bottom: 6px;
     border: 1px solid rgba(201,168,76,0.2); display: block;
   } 
+
+  /* ── JEE Calculator ─────────────────────────────────── */
+  #jeeCalcPanel {
+    padding: 0 16px 12px;
+    animation: calcSlideDown 0.25s ease;
+  }
+  @keyframes calcSlideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .jee-calc {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .jee-calc-screen {
+    background: rgba(0,0,0,0.3);
+    padding: 10px 14px 8px;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+  }
+  .jee-calc-expr {
+    font-size: 0.7rem;
+    color: var(--muted);
+    min-height: 16px;
+    word-break: break-all;
+  }
+  .jee-calc-display {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--accent);
+    word-break: break-all;
+  }
+  .jee-calc-btns {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1px;
+    background: var(--border);
+    padding: 1px;
+  }
+  .calc-btn {
+    background: var(--surface2);
+    border: none;
+    color: var(--text);
+    font-size: 0.82rem;
+    padding: 10px 4px;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .calc-btn:hover { background: rgba(201,168,76,0.1); }
+  .calc-btn:active { background: rgba(201,168,76,0.2); }
+  .calc-fn { color: var(--muted); font-size: 0.75rem; }
+  .calc-op { color: var(--accent); font-weight: 600; }
+  .calc-eq { background: rgba(201,168,76,0.15); color: var(--accent); font-weight: 700; font-size: 1rem; }
+  .calc-eq:hover { background: rgba(201,168,76,0.25); }
+  .calc-clear { color: #f87171; }
+  .calc-toggle-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 8px;
+    background: transparent; border: none; cursor: pointer;
+    color: var(--muted); transition: color 0.2s, background 0.2s;
+    flex-shrink: 0;
+  }
+  .calc-toggle-btn:hover { color: var(--accent); background: rgba(201,168,76,0.1); }
+  .calc-toggle-btn.active { color: var(--accent); background: rgba(201,168,76,0.15); }
