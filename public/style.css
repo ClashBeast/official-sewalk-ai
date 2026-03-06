@@ -405,22 +405,27 @@
   .score-chip-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
   .score-chip-val { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text); }
 
-  /* ── Game Grid: 4 columns × 2 rows of perfect squares ── */
+  /* ── Game Grid: 4 small compact squares per row ── */
   .game-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-auto-rows: auto;
+    grid-template-columns: repeat(4, 220px);
+    grid-auto-rows: 220px;
     gap: 20px;
+    justify-content: start;
   }
   @media (max-width: 720px) {
-    .game-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .game-grid {
+      grid-template-columns: repeat(2, 1fr);
+      grid-auto-rows: 200px;
+      gap: 12px;
+    }
   }
 
   .game-card {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 18px; overflow: hidden; transition: border-color 0.25s, transform 0.2s;
     cursor: pointer; display: flex; flex-direction: column;
-    aspect-ratio: 1 / 1;
+    width: 220px; height: 220px;
   }
   .game-card:hover { transform: translateY(-2px); }
   .game-card[data-game="pattern"]:hover  { border-color: rgba(201,168,76,0.5); }
