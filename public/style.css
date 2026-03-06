@@ -405,61 +405,27 @@
   .score-chip-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
   .score-chip-val { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text); }
 
-  /* ── Game Grid: 4 small compact squares per row ── */
+  /* ── FIXED: 4 cards per row, compact grid ── */
   .game-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 220px);
-    grid-auto-rows: 220px;
-    gap: 20px;
-    justify-content: start;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
   }
-  @media (max-width: 720px) {
-    .game-grid {
-      grid-template-columns: repeat(2, 1fr);
-      grid-auto-rows: 200px;
-      gap: 12px;
-    }
-  }
-
   .game-card {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 18px; overflow: hidden; transition: border-color 0.25s, transform 0.2s;
-    cursor: pointer; display: flex; flex-direction: column;
-    width: 220px; height: 220px;
+    cursor: pointer;
   }
   .game-card:hover { transform: translateY(-2px); }
-  .game-card[data-game="pattern"]:hover  { border-color: rgba(201,168,76,0.5); }
-  .game-card[data-game="focus"]:hover    { border-color: rgba(255,107,53,0.5); }
-  .game-card[data-game="nummem"]:hover   { border-color: rgba(96,165,250,0.5); }
-  .game-card[data-game="stroop"]:hover   { border-color: rgba(248,113,113,0.5); }
-  .game-card[data-game="mathblitz"]:hover{ border-color: rgba(52,211,153,0.5); }
-  .game-card[data-game="missing"]:hover  { border-color: rgba(201,168,76,0.5); }
-  .game-card[data-game="nback"]:hover    { border-color: rgba(167,139,250,0.5); }
-  .game-card[data-game="snake"]:hover    { border-color: rgba(52,211,153,0.5); }
+  .game-card[data-game="pattern"]:hover { border-color: rgba(201,168,76,0.5); }
+  .game-card[data-game="focus"]:hover  { border-color: rgba(255,107,53,0.5); }
 
-  /* ── Uniform banner for ALL game cards ── */
+  /* ── FIXED: Compact banner ── */
   .game-card-banner {
-    height: 80px; display: flex; align-items: center; justify-content: center;
-    font-size: 2.2rem; position: relative; overflow: hidden; flex-shrink: 0;
+    height: 90px; display: flex; align-items: center; justify-content: center;
+    font-size: 2.2rem; position: relative; overflow: hidden;
   }
-  .game-card[data-game="pattern"]   .game-card-banner { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
-  .game-card[data-game="focus"]     .game-card-banner { background: linear-gradient(135deg, #1a0f0a 0%, #2e1010 100%); }
-  .game-card[data-game="nummem"]    .game-card-banner { background: linear-gradient(135deg, #0d1a3a 0%, #0d1117 100%); }
-  .game-card[data-game="stroop"]    .game-card-banner { background: linear-gradient(135deg, #1a0a0a 0%, #0d1117 100%); }
-  .game-card[data-game="mathblitz"] .game-card-banner { background: linear-gradient(135deg, #0a1a0a 0%, #0d1117 100%); }
-  .game-card[data-game="missing"]   .game-card-banner { background: linear-gradient(135deg, #1a1500 0%, #0d1117 100%); }
-  .game-card[data-game="nback"]     .game-card-banner { background: linear-gradient(135deg, #0a0a1a 0%, #0d1117 100%); }
-  .game-card[data-game="snake"]     .game-card-banner { background: linear-gradient(135deg, #0a1a0a 0%, #0d1117 100%); }
-
-  /* Play button colors for all game cards */
-  .game-card[data-game="pattern"]   .game-play-btn { background: var(--accent);   color: #0a0800; }
-  .game-card[data-game="focus"]     .game-play-btn { background: var(--gym);      color: #fff; }
-  .game-card[data-game="nummem"]    .game-play-btn { background: #60a5fa;         color: #0a0800; }
-  .game-card[data-game="stroop"]    .game-play-btn { background: #f87171;         color: #0a0800; }
-  .game-card[data-game="mathblitz"] .game-play-btn { background: #34d399;         color: #0a0800; }
-  .game-card[data-game="missing"]   .game-play-btn { background: var(--accent);   color: #0a0800; }
-  .game-card[data-game="nback"]     .game-play-btn { background: #a78bfa;         color: #0a0800; }
-  .game-card[data-game="snake"]     .game-play-btn { background: #34d399;         color: #0a0800; }
+  .game-card[data-game="pattern"] .game-card-banner { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
+  .game-card[data-game="focus"]   .game-card-banner { background: linear-gradient(135deg, #1a0f0a 0%, #2e1010 100%); }
 
   .game-card-banner-grid {
     display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; opacity: 0.8;
@@ -496,6 +462,8 @@
     cursor: pointer; transition: opacity 0.2s, transform 0.15s;
   }
   .game-play-btn:hover { opacity: 0.85; transform: scale(1.03); }
+  .game-card[data-game="pattern"] .game-play-btn { background: var(--accent); color: #fff; }
+  .game-card[data-game="focus"]   .game-play-btn { background: var(--gym); color: #fff; }
 
   /* =============================================
      GAME MODAL OVERLAY
