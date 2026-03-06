@@ -855,17 +855,6 @@ async function switchMode(btn) {
   document.getElementById('headerBadge').style.borderColor = m.color;
   document.getElementById('userInput').placeholder = m.placeholder;
 
-  // Show calculator button only in JEE mode
-  const calcBtn = document.getElementById('calcToggleBtn');
-  const calcPanel = document.getElementById('jeeCalcPanel');
-  if (currentMode === 'jee') {
-    calcBtn.style.display = 'flex';
-  } else {
-    calcBtn.style.display = 'none';
-    calcPanel.style.display = 'none';
-    calcBtn.classList.remove('active');
-  }
-
   await loadSessionStore(currentMode);
   const sessions = getSortedSessions(currentMode);
   if (sessions.length > 0) {
@@ -1016,6 +1005,8 @@ const GameManager = (() => {
     const f = await getHS('focus');
     document.getElementById('hsPattern').textContent = p > 0 ? `Level ${p}` : '—';
     document.getElementById('hsFocus').textContent   = f > 0 ? `${f} pts` : '—';
+    // Refresh new game scores too
+    setTimeout(() => { if (GameManager.refreshAllScores) GameManager.refreshAllScores(); }, 100);
   }
 
   // ── Shared open/close ───────────────────────
@@ -1423,58 +1414,621 @@ window.addEventListener('appinstalled', () => {
   deferredPrompt = null;
 });
 
-// ── JEE Calculator ────────────────────────────────────
-let calcCurrentInput = '';
-let calcJustEvaled = false;
+// =============================================
+//  NEW GAMES — Number Memory, Stroop, Math Blitz
+//  Missing Number, N-Back, Snake
+//  + Global Leaderboard
+// =============================================
 
-function toggleCalc() {
-  const panel = document.getElementById('jeeCalcPanel');
-  const btn = document.getElementById('calcToggleBtn');
-  const isOpen = panel.style.display !== 'none';
-  panel.style.display = isOpen ? 'none' : 'block';
-  btn.classList.toggle('active', !isOpen);
-}
+// ── Leaderboard helpers ───────────────────────────────
+const LB_GAMES = [
+  { key: 'nummem',    label: '🔢 Number Memory' },
+  { key: 'stroop',    label: '🎨 Stroop' },
+  { key: 'mathblitz', label: '➕ Math Blitz' },
+  { key: 'missing',   label: '🧩 Missing Number' },
+  { key: 'nback',     label: '🧠 N-Back' },
+  { key: 'snake',     label: '🐍 Snake' },
+  { key: 'pattern',   label: '🟣 Pattern Recall' },
+  { key: 'focus',     label: '🟠 Fast Focus' },
+];
 
-function calcInput(val) {
-  if (calcJustEvaled && !isNaN(val) ) { calcCurrentInput = ''; }
-  calcJustEvaled = false;
-  calcCurrentInput += val;
-  document.getElementById('calcDisplay').textContent = calcCurrentInput || '0';
-}
-
-function calcFn(fn) {
-  calcJustEvaled = false;
-  calcCurrentInput += `Math.${fn}(`;
-  document.getElementById('calcDisplay').textContent = calcCurrentInput;
-}
-
-function calcClear() {
-  calcCurrentInput = '';
-  calcJustEvaled = false;
-  document.getElementById('calcDisplay').textContent = '0';
-  document.getElementById('calcExpr').textContent = '';
-}
-
-function calcBackspace() {
-  calcCurrentInput = calcCurrentInput.slice(0, -1);
-  document.getElementById('calcDisplay').textContent = calcCurrentInput || '0';
-}
-
-function calcEquals() {
+async function lbGet(key) {
   try {
-    const expr = calcCurrentInput
-      .replace(/Math\.PI/g, Math.PI)
-      .replace(/Math\.E/g, Math.E);
-    const result = Function('"use strict"; return (' + expr + ')')();
-    const rounded = parseFloat(result.toFixed(10));
-    document.getElementById('calcExpr').textContent = calcCurrentInput + ' =';
-    document.getElementById('calcDisplay').textContent = rounded;
-    calcCurrentInput = String(rounded);
-    calcJustEvaled = true;
-  } catch(e) {
-    document.getElementById('calcDisplay').textContent = 'Error';
-    document.getElementById('calcExpr').textContent = '';
-    calcCurrentInput = '';
-    calcJustEvaled = false;
-  }
+    const r = await window.storage.get('lb:' + key, true);
+    return r ? JSON.parse(r.value) : [];
+  } catch { return []; }
 }
+async function lbSet(key, arr) {
+  try { await window.storage.set('lb:' + key, JSON.stringify(arr), true); } catch {}
+}
+async function lbSubmit(key, score) {
+  const user = window._supabase ? (await window._supabase.auth.getSession())?.data?.session?.user?.email : null;
+  const name = user ? user.split('@')[0] : 'Guest';
+  let arr = await lbGet(key);
+  arr.push({ name, score, date: new Date().toLocaleDateString('en-IN') });
+  arr.sort((a,b) => b.score - a.score);
+  arr = arr.slice(0, 10);
+  await lbSet(key, arr);
+}
+
+// ── Extend GameManager ────────────────────────────────
+const _origGM = GameManager;
+
+// Patch launch/close/restart to handle new games
+const _origLaunch  = GameManager.launch.bind(GameManager);
+const _origClose   = GameManager.close.bind(GameManager);
+const _origRestart = GameManager.restart.bind(GameManager);
+
+GameManager.launch = function(name) {
+  const newGames = ['nummem','stroop','mathblitz','missing','nback','snake','leaderboard'];
+  if (newGames.includes(name)) {
+    if (name === 'nummem')    NM.start();
+    if (name === 'stroop')    ST.start();
+    if (name === 'mathblitz') MB.start();
+    if (name === 'missing')   MS.start();
+    if (name === 'nback')     NB.start();
+    if (name === 'snake')     SK.init();
+    if (name === 'leaderboard') GameManager.openLeaderboard();
+    const cap = name[0].toUpperCase() + name.slice(1);
+    const el = document.getElementById('overlay' + cap);
+    if (el) el.classList.add('open');
+  } else {
+    _origLaunch(name);
+  }
+};
+
+GameManager.close = function(name) {
+  const newGames = ['nummem','stroop','mathblitz','missing','nback','snake','leaderboard'];
+  if (newGames.includes(name)) {
+    if (name === 'snake') SK.stop();
+    const cap = name[0].toUpperCase() + name.slice(1);
+    const el = document.getElementById('overlay' + cap);
+    if (el) el.classList.remove('open');
+    GameManager.refreshAllScores();
+  } else {
+    _origClose(name);
+  }
+};
+
+GameManager.refreshAllScores = async function() {
+  const scores = {
+    nummem:    v => `Level ${v}`,
+    stroop:    v => `${v} pts`,
+    mathblitz: v => `${v} pts`,
+    missing:   v => `${v}/10`,
+    nback:     v => `${v} pts`,
+    snake:     v => `${v} pts`,
+  };
+  const ids = {
+    nummem: 'hsNumMem', stroop: 'hsStroop', mathblitz: 'hsMathBlitz',
+    missing: 'hsMissing', nback: 'hsNBack', snake: 'hsSnake'
+  };
+  for (const [key, fmt] of Object.entries(scores)) {
+    try {
+      const r = await window.storage.get('hs:' + key);
+      const val = r ? parseInt(r.value) : 0;
+      const el = document.getElementById(ids[key]);
+      if (el) el.textContent = val > 0 ? fmt(val) : '—';
+    } catch {}
+  }
+};
+
+GameManager.openLeaderboard = async function() {
+  const overlay = document.getElementById('overlayLeaderboard');
+  overlay.classList.add('open');
+  const tabsEl = document.getElementById('lbTabs');
+  tabsEl.innerHTML = '';
+  let activeKey = LB_GAMES[0].key;
+
+  async function renderTab(key) {
+    activeKey = key;
+    tabsEl.querySelectorAll('.lb-tab').forEach(t => {
+      t.style.background = t.dataset.key === key ? 'rgba(201,168,76,0.2)' : 'rgba(255,255,255,0.04)';
+      t.style.color = t.dataset.key === key ? 'var(--accent)' : 'var(--muted)';
+    });
+    const content = document.getElementById('lbContent');
+    const arr = await lbGet(key);
+    if (!arr.length) {
+      content.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px 0;">No scores yet — be the first!</div>';
+      return;
+    }
+    content.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+        <tr style="color:var(--muted);border-bottom:1px solid var(--border);">
+          <th style="padding:8px;text-align:left;">#</th>
+          <th style="padding:8px;text-align:left;">Player</th>
+          <th style="padding:8px;text-align:right;">Score</th>
+          <th style="padding:8px;text-align:right;">Date</th>
+        </tr>
+        ${arr.map((e,i) => `
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+            <td style="padding:8px;color:${i===0?'#c9a84c':i===1?'#9ca3af':i===2?'#cd7f32':'var(--muted)'};">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td>
+            <td style="padding:8px;color:var(--text);">${e.name}</td>
+            <td style="padding:8px;text-align:right;color:var(--accent);font-weight:700;">${e.score}</td>
+            <td style="padding:8px;text-align:right;color:var(--muted);">${e.date}</td>
+          </tr>`).join('')}
+      </table>`;
+  }
+
+  LB_GAMES.forEach(g => {
+    const btn = document.createElement('button');
+    btn.className = 'lb-tab';
+    btn.dataset.key = g.key;
+    btn.textContent = g.label;
+    btn.style.cssText = 'padding:6px 12px;border-radius:99px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--muted);font-size:0.72rem;cursor:pointer;font-family:"DM Sans",sans-serif;';
+    btn.onclick = () => renderTab(g.key);
+    tabsEl.appendChild(btn);
+  });
+  renderTab(activeKey);
+};
+
+// ─────────────────────────────────────────────
+//  GAME 3 — Number Memory
+// ─────────────────────────────────────────────
+const NM = (() => {
+  let level, currentNum, phase;
+
+  function el(id) { return document.getElementById(id); }
+
+  function start() {
+    level = 1; phase = 'show';
+    el('nmResult').style.display = 'none';
+    el('nmInput').style.display = 'none';
+    el('nmInput').value = '';
+    el('nmBtn').textContent = 'Start';
+    el('nmStatus').textContent = 'Press Start to begin!';
+    el('nmNumber').textContent = '';
+  }
+
+  function action() {
+    if (phase === 'show' || phase === 'start') {
+      showNumber();
+    }
+  }
+
+  function showNumber() {
+    phase = 'show';
+    currentNum = Array.from({length: level}, () => Math.floor(Math.random()*10)).join('');
+    el('nmStatus').textContent = `Memorise this ${level}-digit number!`;
+    el('nmNumber').textContent = currentNum;
+    el('nmInput').style.display = 'none';
+    el('nmBtn').style.display = 'none';
+    setTimeout(() => {
+      el('nmNumber').textContent = '';
+      el('nmStatus').textContent = 'Now type the number!';
+      el('nmInput').style.display = 'block';
+      el('nmInput').value = '';
+      el('nmInput').focus();
+      el('nmBtn').textContent = 'Submit';
+      el('nmBtn').style.display = '';
+      phase = 'input';
+    }, Math.max(1500, level * 500));
+  }
+
+  function submit() {
+    if (phase !== 'input') return;
+    const ans = el('nmInput').value.trim();
+    if (ans === currentNum) {
+      level++;
+      el('nmStatus').textContent = `✓ Correct! Level ${level} — ready?`;
+      el('nmInput').style.display = 'none';
+      el('nmBtn').textContent = 'Next Level →';
+      phase = 'show';
+      // Save high score
+      window.storage.get('hs:nummem').then(r => {
+        const best = r ? parseInt(r.value) : 0;
+        if (level - 1 > best) window.storage.set('hs:nummem', String(level-1));
+      }).catch(()=>{});
+      lbSubmit('nummem', level - 1);
+    } else {
+      const best = level - 1;
+      el('nmResult').style.display = 'block';
+      el('nmResult').innerHTML = `<div style="color:#f87171;">✗ Wrong! The number was <strong>${currentNum}</strong></div><div style="color:var(--muted);margin-top:6px;">You reached Level ${best}</div><button onclick="NM.start()" style="margin-top:12px;padding:8px 24px;border-radius:99px;border:none;background:var(--accent);color:#0a0800;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Play Again</button>`;
+      el('nmInput').style.display = 'none';
+      el('nmBtn').style.display = 'none';
+      phase = 'done';
+    }
+  }
+
+  return { start, action, submit };
+})();
+
+// ─────────────────────────────────────────────
+//  GAME 4 — Stroop Challenge
+// ─────────────────────────────────────────────
+const ST = (() => {
+  const COLORS = [
+    { name: 'RED',    hex: '#f87171' },
+    { name: 'BLUE',   hex: '#60a5fa' },
+    { name: 'GREEN',  hex: '#34d399' },
+    { name: 'YELLOW', hex: '#fbbf24' },
+    { name: 'PURPLE', hex: '#a78bfa' },
+    { name: 'ORANGE', hex: '#fb923c' },
+  ];
+  let score, timeLeft, timer, inkColor;
+
+  function el(id) { return document.getElementById(id); }
+
+  function start() {
+    score = 0; timeLeft = 30;
+    el('stroopResult').style.display = 'none';
+    el('stroopBtns').style.display = 'flex';
+    tick();
+    nextRound();
+  }
+
+  function tick() {
+    el('stroopScore').textContent = `Score: ${score} | Time: ${timeLeft}s`;
+    el('stroopTimer').style.width = (timeLeft / 30 * 100) + '%';
+    if (timeLeft <= 0) { end(); return; }
+    timeLeft--;
+    timer = setTimeout(tick, 1000);
+  }
+
+  function nextRound() {
+    const word  = COLORS[Math.floor(Math.random() * COLORS.length)];
+    inkColor    = COLORS[Math.floor(Math.random() * COLORS.length)];
+    el('stroopWord').textContent  = word.name;
+    el('stroopWord').style.color  = inkColor.hex;
+
+    // Shuffle color buttons
+    const shuffled = [...COLORS].sort(() => Math.random() - 0.5);
+    el('stroopBtns').innerHTML = shuffled.map(c =>
+      `<button onclick="ST.answer('${c.name}')" style="padding:10px 16px;border-radius:10px;border:none;background:${c.hex};color:#0a0800;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.85rem;">${c.name}</button>`
+    ).join('');
+  }
+
+  function answer(colorName) {
+    if (timeLeft <= 0) return;
+    if (colorName === inkColor.name) {
+      score++;
+      el('stroopScore').textContent = `Score: ${score} | Time: ${timeLeft}s`;
+    }
+    nextRound();
+  }
+
+  function end() {
+    clearTimeout(timer);
+    el('stroopBtns').style.display = 'none';
+    el('stroopWord').textContent = '';
+    el('stroopResult').style.display = 'block';
+    el('stroopResult').innerHTML = `<div style="color:var(--accent);font-size:1.4rem;font-weight:800;">Score: ${score}</div><div style="color:var(--muted);margin-top:6px;">Great brain workout!</div><button onclick="ST.start()" style="margin-top:12px;padding:8px 24px;border-radius:99px;border:none;background:var(--accent);color:#0a0800;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Play Again</button>`;
+    window.storage.get('hs:stroop').then(r => {
+      const best = r ? parseInt(r.value) : 0;
+      if (score > best) window.storage.set('hs:stroop', String(score));
+    }).catch(()=>{});
+    lbSubmit('stroop', score);
+  }
+
+  return { start, answer };
+})();
+
+// ─────────────────────────────────────────────
+//  GAME 5 — Math Blitz
+// ─────────────────────────────────────────────
+const MB = (() => {
+  let score, timeLeft, timer, correctAns, phase;
+
+  function el(id) { return document.getElementById(id); }
+
+  function start() {
+    score = 0; timeLeft = 60; phase = 'playing';
+    el('mbResult').style.display = 'none';
+    el('mbInput').style.display = 'block';
+    el('mbBtn').style.display = 'none';
+    el('mbFeedback').textContent = '';
+    tick();
+    nextQ();
+  }
+
+  function action() { start(); }
+
+  function tick() {
+    el('mbScore').textContent = `Score: ${score} | Time: ${timeLeft}s`;
+    el('mbTimer').style.width = (timeLeft / 60 * 100) + '%';
+    if (timeLeft <= 0) { end(); return; }
+    timeLeft--;
+    timer = setTimeout(tick, 1000);
+  }
+
+  function nextQ() {
+    if (timeLeft <= 0) return;
+    const diff = Math.min(Math.floor(score / 5) + 1, 4);
+    let q, a;
+    const ops = diff < 2 ? ['+','-'] : diff < 3 ? ['+','-','*'] : ['+','-','*','/'];
+    const op = ops[Math.floor(Math.random() * ops.length)];
+    let n1 = Math.floor(Math.random() * (10 * diff)) + 1;
+    let n2 = Math.floor(Math.random() * (10 * diff)) + 1;
+    if (op === '-' && n2 > n1) [n1,n2] = [n2,n1];
+    if (op === '/') { n2 = [2,3,4,5][Math.floor(Math.random()*4)]; n1 = n2 * (Math.floor(Math.random()*9)+1); }
+    const sym = op === '*' ? '×' : op === '/' ? '÷' : op;
+    q = `${n1} ${sym} ${n2} = ?`;
+    a = op === '+' ? n1+n2 : op === '-' ? n1-n2 : op === '*' ? n1*n2 : n1/n2;
+    correctAns = a;
+    el('mbQuestion').textContent = q;
+    el('mbInput').value = '';
+    el('mbInput').focus();
+  }
+
+  function submit() {
+    if (phase !== 'playing' || timeLeft <= 0) return;
+    const ans = parseFloat(el('mbInput').value);
+    if (ans === correctAns) {
+      score++;
+      el('mbFeedback').style.color = '#34d399';
+      el('mbFeedback').textContent = '✓ Correct!';
+    } else {
+      el('mbFeedback').style.color = '#f87171';
+      el('mbFeedback').textContent = `✗ Answer was ${correctAns}`;
+    }
+    setTimeout(() => { el('mbFeedback').textContent = ''; nextQ(); }, 400);
+  }
+
+  function end() {
+    clearTimeout(timer);
+    phase = 'done';
+    el('mbInput').style.display = 'none';
+    el('mbResult').style.display = 'block';
+    el('mbResult').innerHTML = `<div style="color:#34d399;font-size:1.4rem;font-weight:800;">Score: ${score}</div><div style="color:var(--muted);margin-top:6px;">Questions answered correctly!</div><button onclick="MB.start()" style="margin-top:12px;padding:8px 24px;border-radius:99px;border:none;background:#34d399;color:#0a0800;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Play Again</button>`;
+    window.storage.get('hs:mathblitz').then(r => {
+      const best = r ? parseInt(r.value) : 0;
+      if (score > best) window.storage.set('hs:mathblitz', String(score));
+    }).catch(()=>{});
+    lbSubmit('mathblitz', score);
+  }
+
+  return { start, action, submit };
+})();
+
+// ─────────────────────────────────────────────
+//  GAME 6 — Missing Number
+// ─────────────────────────────────────────────
+const MS = (() => {
+  let qNum, correct, score;
+  const PATTERNS = [
+    () => { const s=Math.floor(Math.random()*5)+1,f=Math.floor(Math.random()*20)+1; const seq=[f,f+s,f+2*s,f+3*s,f+4*s]; const hi=Math.floor(Math.random()*3)+1; const a=seq[hi]; seq[hi]='?'; return {seq,a}; },
+    () => { const r=Math.floor(Math.random()*3)+2,f=Math.floor(Math.random()*5)+1; const seq=[f,f*r,f*r*r,f*r*r*r,f*r*r*r*r]; const hi=Math.floor(Math.random()*3)+1; const a=seq[hi]; seq[hi]='?'; return {seq,a}; },
+    () => { let seq=[1,1,2,3,5,8,13,21]; const start=Math.floor(Math.random()*4); const s=seq.slice(start,start+5); const hi=Math.floor(Math.random()*3)+1; const a=s[hi]; s[hi]='?'; return {seq:s,a}; },
+    () => { const seq=[1,4,9,16,25,36]; const s=seq.slice(0,5); const hi=Math.floor(Math.random()*3)+1; const a=s[hi]; s[hi]='?'; return {seq:s,a}; },
+  ];
+
+  function el(id) { return document.getElementById(id); }
+
+  function start() { score = 0; qNum = 0; el('misResult').style.display='none'; nextQ(); }
+
+  function nextQ() {
+    if (qNum >= 10) { end(); return; }
+    qNum++;
+    el('misScore').textContent = `Question ${qNum} of 10 | Score: ${score}`;
+    el('misFeedback').textContent = '';
+    const pattern = PATTERNS[Math.floor(Math.random()*PATTERNS.length)]();
+    correct = pattern.a;
+    el('misSequence').innerHTML = pattern.seq.map(n =>
+      n === '?' ? `<span style="color:#f87171;font-size:2rem;">?</span>` : `<span>${n}</span>`
+    ).join('<span style="opacity:0.4;">·</span>');
+
+    // Generate options
+    const opts = new Set([correct]);
+    while (opts.size < 4) opts.add(correct + (Math.floor(Math.random()*10)-5));
+    const shuffled = [...opts].sort(() => Math.random()-0.5);
+    el('misBtns').innerHTML = shuffled.map(o =>
+      `<button onclick="MS.answer(${o})" style="padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:1rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">${o}</button>`
+    ).join('');
+  }
+
+  function answer(val) {
+    if (val === correct) {
+      score++;
+      el('misFeedback').style.color = '#34d399';
+      el('misFeedback').textContent = '✓ Correct!';
+    } else {
+      el('misFeedback').style.color = '#f87171';
+      el('misFeedback').textContent = `✗ Answer was ${correct}`;
+    }
+    setTimeout(nextQ, 700);
+  }
+
+  function end() {
+    el('misResult').style.display = 'block';
+    el('misResult').innerHTML = `<div style="color:var(--accent);font-size:1.4rem;font-weight:800;">${score}/10</div><div style="color:var(--muted);margin-top:6px;">${score>=8?'Outstanding!':score>=5?'Good job!':'Keep practicing!'}</div><button onclick="MS.start()" style="margin-top:12px;padding:8px 24px;border-radius:99px;border:none;background:var(--accent);color:#0a0800;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Play Again</button>`;
+    el('misBtns').innerHTML = '';
+    window.storage.get('hs:missing').then(r => {
+      const best = r ? parseInt(r.value) : 0;
+      if (score > best) window.storage.set('hs:missing', String(score));
+    }).catch(()=>{});
+    lbSubmit('missing', score);
+  }
+
+  return { start, answer };
+})();
+
+// ─────────────────────────────────────────────
+//  GAME 7 — N-Back Task
+// ─────────────────────────────────────────────
+const NB = (() => {
+  const LETTERS = 'BCDFGHJKLMNPQRSTVWXYZ'.split('');
+  let n, sequence, pos, score, hits, misses, timer, phase;
+
+  function el(id) { return document.getElementById(id); }
+
+  function start() {
+    n = 2; sequence = []; pos = 0; score = 0; hits = 0; misses = 0; phase = 'playing';
+    el('nbResult').style.display = 'none';
+    el('nbBtn').style.display = 'none';
+    el('nbLevel').textContent = `Level: ${n}-Back`;
+    el('nbStatus').textContent = 'Does this match what appeared 2 steps ago?';
+    el('nbScore').textContent = 'Score: 0';
+    showNext();
+  }
+
+  function action() { start(); }
+
+  function showNext() {
+    if (pos >= 25) { end(); return; }
+    const letter = LETTERS[Math.floor(Math.random() * LETTERS.length)];
+    sequence.push(letter);
+    el('nbDisplay').textContent = letter;
+    el('nbDisplay').style.opacity = '1';
+    setTimeout(() => { el('nbDisplay').style.opacity = '0.1'; }, 500);
+    pos++;
+    timer = setTimeout(showNext, 2000);
+  }
+
+  function match() {
+    if (phase !== 'playing') return;
+    if (pos > n && sequence[pos-1] === sequence[pos-1-n]) {
+      score += 10; hits++;
+      el('nbScore').style.color = '#34d399';
+    } else {
+      score = Math.max(0, score - 5); misses++;
+      el('nbScore').style.color = '#f87171';
+    }
+    el('nbScore').textContent = `Score: ${score}`;
+    setTimeout(() => el('nbScore').style.color = 'var(--muted)', 500);
+  }
+
+  function noMatch() {
+    if (phase !== 'playing') return;
+    if (pos > n && sequence[pos-1] !== sequence[pos-1-n]) {
+      score += 5;
+      el('nbScore').style.color = '#34d399';
+    }
+    el('nbScore').textContent = `Score: ${score}`;
+    setTimeout(() => el('nbScore').style.color = 'var(--muted)', 500);
+  }
+
+  function end() {
+    clearTimeout(timer);
+    phase = 'done';
+    el('nbResult').style.display = 'block';
+    el('nbResult').innerHTML = `<div style="color:var(--accent);font-size:1.4rem;font-weight:800;">Score: ${score}</div><div style="color:var(--muted);margin-top:6px;">Hits: ${hits} | Misses: ${misses}</div><button onclick="NB.start()" style="margin-top:12px;padding:8px 24px;border-radius:99px;border:none;background:var(--accent);color:#0a0800;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Play Again</button>`;
+    el('nbBtn').style.display = '';
+    el('nbBtn').textContent = 'Play Again';
+    el('nbBtn').onclick = () => NB.start();
+    window.storage.get('hs:nback').then(r => {
+      const best = r ? parseInt(r.value) : 0;
+      if (score > best) window.storage.set('hs:nback', String(score));
+    }).catch(()=>{});
+    lbSubmit('nback', score);
+  }
+
+  return { start, action, match, noMatch };
+})();
+
+// ─────────────────────────────────────────────
+//  GAME 8 — Snake
+// ─────────────────────────────────────────────
+const SK = (() => {
+  const GRID = 18, CELL = 20;
+  let snake, dir, nextDir, food, score, gameLoop, running;
+  let canvas, ctx;
+
+  function el(id) { return document.getElementById(id); }
+
+  function init() {
+    canvas = el('snakeCanvas');
+    ctx = canvas.getContext('2d');
+    canvas.width = GRID * CELL;
+    canvas.height = GRID * CELL;
+    score = 0; running = false;
+    el('snakeScore').textContent = 'Score: 0';
+    el('snakeStatus').textContent = 'Press Start or use arrow keys / WASD';
+    el('snakeBtn').textContent = 'Start';
+    drawIdle();
+  }
+
+  function drawIdle() {
+    ctx.fillStyle = '#0a0800';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgba(201,168,76,0.15)';
+    ctx.font = 'bold 24px DM Sans';
+    ctx.textAlign = 'center';
+    ctx.fillText('🐍 Press Start', canvas.width/2, canvas.height/2);
+  }
+
+  function action() {
+    if (running) { stop(); el('snakeBtn').textContent = 'Restart'; }
+    else { startGame(); }
+  }
+
+  function startGame() {
+    snake = [{x:9,y:9},{x:8,y:9},{x:7,y:9}];
+    dir = {x:1,y:0}; nextDir = {x:1,y:0};
+    score = 0; running = true;
+    placeFood();
+    el('snakeBtn').textContent = 'Stop';
+    el('snakeStatus').textContent = 'Arrow keys or WASD to move';
+    clearInterval(gameLoop);
+    gameLoop = setInterval(step, 120);
+  }
+
+  function placeFood() {
+    do { food = {x:Math.floor(Math.random()*GRID), y:Math.floor(Math.random()*GRID)}; }
+    while (snake.some(s => s.x===food.x && s.y===food.y));
+  }
+
+  function step() {
+    dir = nextDir;
+    const head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
+    if (head.x<0||head.x>=GRID||head.y<0||head.y>=GRID||snake.some(s=>s.x===head.x&&s.y===head.y)) {
+      gameOver(); return;
+    }
+    snake.unshift(head);
+    if (head.x===food.x && head.y===food.y) { score++; el('snakeScore').textContent=`Score: ${score}`; placeFood(); }
+    else snake.pop();
+    draw();
+  }
+
+  function draw() {
+    ctx.fillStyle = '#0a0800';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Grid dots
+    ctx.fillStyle = 'rgba(255,255,255,0.03)';
+    for (let x=0;x<GRID;x++) for(let y=0;y<GRID;y++) {
+      ctx.fillRect(x*CELL+CELL/2-1,y*CELL+CELL/2-1,2,2);
+    }
+    // Food
+    ctx.fillStyle = '#f87171';
+    ctx.beginPath();
+    ctx.arc(food.x*CELL+CELL/2, food.y*CELL+CELL/2, CELL/2-2, 0, Math.PI*2);
+    ctx.fill();
+    // Snake
+    snake.forEach((s,i) => {
+      ctx.fillStyle = i===0 ? '#c9a84c' : `hsl(45,${60-i}%,${50-i*0.5}%)`;
+      ctx.beginPath();
+      ctx.roundRect(s.x*CELL+1, s.y*CELL+1, CELL-2, CELL-2, 4);
+      ctx.fill();
+    });
+  }
+
+  function gameOver() {
+    clearInterval(gameLoop);
+    running = false;
+    el('snakeBtn').textContent = 'Play Again';
+    el('snakeStatus').textContent = `Game Over! Score: ${score}`;
+    window.storage.get('hs:snake').then(r => {
+      const best = r ? parseInt(r.value) : 0;
+      if (score > best) window.storage.set('hs:snake', String(score));
+    }).catch(()=>{});
+    lbSubmit('snake', score);
+  }
+
+  function stop() { clearInterval(gameLoop); running = false; }
+
+  function setDir(dx, dy) {
+    if (!running) return;
+    if (dx===1&&dir.x===-1) return;
+    if (dx===-1&&dir.x===1) return;
+    if (dy===1&&dir.y===-1) return;
+    if (dy===-1&&dir.y===1) return;
+    nextDir = {x:dx,y:dy};
+  }
+
+  document.addEventListener('keydown', e => {
+    const map = {ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],w:[0,-1],s:[0,1],a:[-1,0],d:[1,0]};
+    const d = map[e.key];
+    if (d) { e.preventDefault(); setDir(d[0],d[1]); }
+  });
+
+  return { init, action, stop, setDir };
+})();
