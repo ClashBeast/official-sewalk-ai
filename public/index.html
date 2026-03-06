@@ -171,56 +171,6 @@
       <span id="memoryBarText">Memory active · Gym Trainer · New Chat</span>
     </div>
 
-    <!-- JEE Calculator Panel — hidden by default -->
-    <div id="jeeCalcPanel" style="display:none;">
-      <div class="jee-calc">
-        <div class="jee-calc-screen">
-          <div class="jee-calc-expr" id="calcExpr"></div>
-          <div class="jee-calc-display" id="calcDisplay">0</div>
-        </div>
-        <div class="jee-calc-btns">
-          <!-- Row 1 -->
-          <button class="calc-btn calc-fn" onclick="calcFn('sin')">sin</button>
-          <button class="calc-btn calc-fn" onclick="calcFn('cos')">cos</button>
-          <button class="calc-btn calc-fn" onclick="calcFn('tan')">tan</button>
-          <button class="calc-btn calc-fn" onclick="calcFn('log')">log</button>
-          <button class="calc-btn calc-fn" onclick="calcFn('sqrt')">√</button>
-          <!-- Row 2 -->
-          <button class="calc-btn calc-fn" onclick="calcInput('Math.PI')">π</button>
-          <button class="calc-btn calc-fn" onclick="calcInput('Math.E')">e</button>
-          <button class="calc-btn calc-fn" onclick="calcInput('**2')">x²</button>
-          <button class="calc-btn calc-fn" onclick="calcInput('**3')">x³</button>
-          <button class="calc-btn calc-fn" onclick="calcInput('**')">xⁿ</button>
-          <!-- Row 3 -->
-          <button class="calc-btn calc-fn" onclick="calcInput('(')">(</button>
-          <button class="calc-btn calc-fn" onclick="calcInput(')')">)</button>
-          <button class="calc-btn calc-fn" onclick="calcInput('%')">%</button>
-          <button class="calc-btn calc-clear" onclick="calcClear()">C</button>
-          <button class="calc-btn calc-op" onclick="calcBackspace()">⌫</button>
-          <!-- Row 4 -->
-          <button class="calc-btn" onclick="calcInput('7')">7</button>
-          <button class="calc-btn" onclick="calcInput('8')">8</button>
-          <button class="calc-btn" onclick="calcInput('9')">9</button>
-          <button class="calc-btn calc-op" onclick="calcInput('/')">÷</button>
-          <button class="calc-btn calc-op" onclick="calcInput('*')">×</button>
-          <!-- Row 5 -->
-          <button class="calc-btn" onclick="calcInput('4')">4</button>
-          <button class="calc-btn" onclick="calcInput('5')">5</button>
-          <button class="calc-btn" onclick="calcInput('6')">6</button>
-          <button class="calc-btn calc-op" onclick="calcInput('-')">−</button>
-          <button class="calc-btn calc-op" onclick="calcInput('+')">+</button>
-          <!-- Row 6 -->
-          <button class="calc-btn" onclick="calcInput('1')">1</button>
-          <button class="calc-btn" onclick="calcInput('2')">2</button>
-          <button class="calc-btn" onclick="calcInput('3')">3</button>
-          <button class="calc-btn" onclick="calcInput('0')">0</button>
-          <button class="calc-btn" onclick="calcInput('.')">.</button>
-          <!-- Row 7 — equals full width -->
-          <button class="calc-btn calc-eq" onclick="calcEquals()" style="grid-column:span 5;">=</button>
-        </div>
-      </div>
-    </div>
-
     <div class="input-area" style="position:relative;">
       <div class="auth-lock-overlay" id="chatLockOverlay">
         <div class="auth-lock-icon">⚠️</div>
@@ -236,9 +186,6 @@
         <input type="file" id="imageUploadInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)"/>
         <input type="text" id="userInput" placeholder="Ask your Gym Trainer..."
                onkeydown="if(event.key==='Enter') sendMsg()" />
-        <button id="calcToggleBtn" class="calc-toggle-btn" onclick="toggleCalc()" title="Calculator" style="display:none;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/><line x1="14" y1="18" x2="16" y2="18"/></svg>
-        </button>
         <button class="send-btn" onclick="sendMsg()">↑</button>
       </div>
     </div>
@@ -270,6 +217,55 @@
       <div class="score-chip-body">
         <div class="score-chip-label">Fast Focus · Best</div>
         <div class="score-chip-val" id="hsFocus">—</div>
+      </div>
+    </div>
+    <div class="score-chip">
+      <div class="score-chip-icon">🔵</div>
+      <div class="score-chip-body">
+        <div class="score-chip-label">Number Memory · Best</div>
+        <div class="score-chip-val" id="hsNumMem">—</div>
+      </div>
+    </div>
+    <div class="score-chip">
+      <div class="score-chip-icon">🟢</div>
+      <div class="score-chip-body">
+        <div class="score-chip-label">Math Blitz · Best</div>
+        <div class="score-chip-val" id="hsMathBlitz">—</div>
+      </div>
+    </div>
+    <div class="score-chip">
+      <div class="score-chip-icon">🔴</div>
+      <div class="score-chip-body">
+        <div class="score-chip-label">Stroop · Best</div>
+        <div class="score-chip-val" id="hsStroop">—</div>
+      </div>
+    </div>
+    <div class="score-chip">
+      <div class="score-chip-icon">🟡</div>
+      <div class="score-chip-body">
+        <div class="score-chip-label">Missing Number · Best</div>
+        <div class="score-chip-val" id="hsMissing">—</div>
+      </div>
+    </div>
+    <div class="score-chip">
+      <div class="score-chip-icon">⚪</div>
+      <div class="score-chip-body">
+        <div class="score-chip-label">N-Back · Best</div>
+        <div class="score-chip-val" id="hsNBack">—</div>
+      </div>
+    </div>
+    <div class="score-chip">
+      <div class="score-chip-icon">🐍</div>
+      <div class="score-chip-body">
+        <div class="score-chip-label">Snake · Best</div>
+        <div class="score-chip-val" id="hsSnake">—</div>
+      </div>
+    </div>
+    <div class="score-chip" onclick="GameManager.openLeaderboard()" style="cursor:pointer;border-color:rgba(201,168,76,0.4);background:rgba(201,168,76,0.08);">
+      <div class="score-chip-icon">🏆</div>
+      <div class="score-chip-body">
+        <div class="score-chip-label">Global Leaderboard</div>
+        <div class="score-chip-val" style="color:var(--accent);">View →</div>
       </div>
     </div>
   </div>
@@ -312,10 +308,230 @@
       </div>
     </div>
 
-  </div>
+  </div><!-- end existing game cards -->
+
+    <!-- Number Memory -->
+    <div class="game-card" data-game="nummem" onclick="GameManager.launch('nummem')">
+      <div class="game-card-banner" style="background:linear-gradient(135deg,#1a1f3a,#0d1117);display:flex;align-items:center;justify-content:center;gap:8px;">
+        <span style="font-size:1.8rem;font-weight:800;color:#60a5fa;letter-spacing:4px;">3 7 1</span>
+      </div>
+      <div class="game-card-body">
+        <div class="game-card-title">Number Memory <span class="game-skill-tag memory">Short Term Memory</span></div>
+        <div class="game-card-desc">A number flashes briefly — remember it and type it back. Each round adds a digit. How far can your memory go?</div>
+        <button class="game-play-btn">▶ Play</button>
+      </div>
+    </div>
+
+    <!-- Stroop Test -->
+    <div class="game-card" data-game="stroop" onclick="GameManager.launch('stroop')">
+      <div class="game-card-banner" style="background:linear-gradient(135deg,#1a0a0a,#0d1117);display:flex;align-items:center;justify-content:center;">
+        <span style="font-size:2rem;font-weight:900;color:#4ecdc4;">RED</span>
+      </div>
+      <div class="game-card-body">
+        <div class="game-card-title">Stroop Challenge <span class="game-skill-tag spatial">Cognitive Flex</span></div>
+        <div class="game-card-desc">A color word appears in a different color ink. Click the INK COLOR not the word. Used in real psychology research worldwide.</div>
+        <button class="game-play-btn">▶ Play</button>
+      </div>
+    </div>
+
+    <!-- Mental Math Blitz -->
+    <div class="game-card" data-game="mathblitz" onclick="GameManager.launch('mathblitz')">
+      <div class="game-card-banner" style="background:linear-gradient(135deg,#0a1a0a,#0d1117);display:flex;align-items:center;justify-content:center;">
+        <span style="font-size:1.6rem;font-weight:800;color:#34d399;">47 + 38 = ?</span>
+      </div>
+      <div class="game-card-body">
+        <div class="game-card-title">Math Blitz <span class="game-skill-tag memory">Processing Speed</span></div>
+        <div class="game-card-desc">Solve mental math problems against the clock. Difficulty ramps up fast. Perfect for JEE students to sharpen calculation speed.</div>
+        <button class="game-play-btn">▶ Play</button>
+      </div>
+    </div>
+
+    <!-- Missing Number -->
+    <div class="game-card" data-game="missing" onclick="GameManager.launch('missing')">
+      <div class="game-card-banner" style="background:linear-gradient(135deg,#1a1500,#0d1117);display:flex;align-items:center;justify-content:center;gap:6px;">
+        <span style="font-size:1.4rem;font-weight:800;color:#c9a84c;">2 · 4 · ? · 16</span>
+      </div>
+      <div class="game-card-body">
+        <div class="game-card-title">Missing Number <span class="game-skill-tag spatial">Logic & IQ</span></div>
+        <div class="game-card-desc">Find the missing number in the sequence. Patterns get increasingly complex — arithmetic, geometric, Fibonacci, and more.</div>
+        <button class="game-play-btn">▶ Play</button>
+      </div>
+    </div>
+
+    <!-- N-Back -->
+    <div class="game-card" data-game="nback" onclick="GameManager.launch('nback')">
+      <div class="game-card-banner" style="background:linear-gradient(135deg,#0a0a1a,#0d1117);display:flex;align-items:center;justify-content:center;">
+        <span style="font-size:1.4rem;font-weight:800;color:#a78bfa;">N-Back</span>
+      </div>
+      <div class="game-card-body">
+        <div class="game-card-title">N-Back Task <span class="game-skill-tag memory">Working Memory</span></div>
+        <div class="game-card-desc">Remember what appeared N steps ago and press match when it repeats. Used by NASA for astronaut selection. Scientifically proven to raise fluid IQ.</div>
+        <button class="game-play-btn">▶ Play</button>
+      </div>
+    </div>
+
+    <!-- Snake -->
+    <div class="game-card" data-game="snake" onclick="GameManager.launch('snake')">
+      <div class="game-card-banner" style="background:linear-gradient(135deg,#0a1a0a,#0d1117);display:flex;align-items:center;justify-content:center;">
+        <span style="font-size:2.5rem;">🐍</span>
+      </div>
+      <div class="game-card-body">
+        <div class="game-card-title">Snake <span class="game-skill-tag spatial">Spatial Planning</span></div>
+        <div class="game-card-desc">Classic snake with increasing speed. Plan your path, avoid walls and yourself. Trains spatial reasoning and split-second decision making.</div>
+        <button class="game-play-btn">▶ Play</button>
+      </div>
+    </div>
+
+  </div><!-- end .game-grid -->
+
 </div><!-- #gamesView -->
 
+<!-- =============================================
+     LEADERBOARD MODAL
+============================================= -->
+<div class="game-overlay" id="overlayLeaderboard">
+  <div class="game-modal" style="max-width:480px;">
+    <div class="game-modal-header">
+      <span>🏆 Global Leaderboard</span>
+      <button class="game-close-btn" onclick="GameManager.close('leaderboard')">✕</button>
+    </div>
+    <div style="padding:16px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="lbTabs"></div>
+      <div id="lbContent" style="min-height:200px;"></div>
+    </div>
+  </div>
+</div>
 
+<!-- =============================================
+     NUMBER MEMORY MODAL
+============================================= -->
+<div class="game-overlay" id="overlayNummem">
+  <div class="game-modal">
+    <div class="game-modal-header">
+      <span>🔢 Number Memory</span>
+      <button class="game-close-btn" onclick="GameManager.close('nummem')">✕</button>
+    </div>
+    <div style="padding:24px;text-align:center;">
+      <div id="nmStatus" style="color:var(--muted);font-size:0.85rem;margin-bottom:12px;">Get ready...</div>
+      <div id="nmNumber" style="font-size:3rem;font-weight:900;color:var(--accent);letter-spacing:8px;min-height:72px;display:flex;align-items:center;justify-content:center;"></div>
+      <input id="nmInput" type="number" placeholder="Type the number..." style="display:none;width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:1.2rem;text-align:center;margin-top:12px;font-family:'DM Sans',sans-serif;" onkeydown="if(event.key==='Enter')NM.submit()"/>
+      <button id="nmBtn" onclick="NM.action()" style="margin-top:14px;padding:10px 32px;border-radius:99px;border:none;background:var(--accent);color:#0a0800;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Start</button>
+      <div id="nmResult" style="display:none;margin-top:16px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- =============================================
+     STROOP MODAL
+============================================= -->
+<div class="game-overlay" id="overlayStroop">
+  <div class="game-modal">
+    <div class="game-modal-header">
+      <span>🎨 Stroop Challenge</span>
+      <button class="game-close-btn" onclick="GameManager.close('stroop')">✕</button>
+    </div>
+    <div style="padding:24px;text-align:center;">
+      <div id="stroopScore" style="font-size:0.85rem;color:var(--muted);margin-bottom:4px;">Score: 0 | Time: 30s</div>
+      <div id="stroopTimer" style="height:4px;background:var(--accent);border-radius:2px;margin-bottom:20px;transition:width 0.1s;"></div>
+      <div id="stroopWord" style="font-size:3.5rem;font-weight:900;min-height:80px;display:flex;align-items:center;justify-content:center;"></div>
+      <div style="margin-top:8px;font-size:0.78rem;color:var(--muted);">Click the INK COLOR not the word</div>
+      <div id="stroopBtns" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:16px;"></div>
+      <div id="stroopResult" style="display:none;margin-top:16px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- =============================================
+     MATH BLITZ MODAL
+============================================= -->
+<div class="game-overlay" id="overlayMathblitz">
+  <div class="game-modal">
+    <div class="game-modal-header">
+      <span>➕ Math Blitz</span>
+      <button class="game-close-btn" onclick="GameManager.close('mathblitz')">✕</button>
+    </div>
+    <div style="padding:24px;text-align:center;">
+      <div id="mbScore" style="font-size:0.85rem;color:var(--muted);margin-bottom:4px;">Score: 0 | Time: 60s</div>
+      <div id="mbTimer" style="height:4px;background:#34d399;border-radius:2px;margin-bottom:20px;transition:width 0.1s;"></div>
+      <div id="mbQuestion" style="font-size:2.2rem;font-weight:800;color:var(--text);min-height:60px;display:flex;align-items:center;justify-content:center;"></div>
+      <input id="mbInput" type="number" placeholder="Answer..." style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:1.4rem;text-align:center;margin-top:12px;font-family:'DM Sans',sans-serif;" onkeydown="if(event.key==='Enter')MB.submit()"/>
+      <button id="mbBtn" onclick="MB.action()" style="margin-top:14px;padding:10px 32px;border-radius:99px;border:none;background:#34d399;color:#0a0800;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Start</button>
+      <div id="mbFeedback" style="min-height:24px;margin-top:8px;font-size:0.9rem;"></div>
+      <div id="mbResult" style="display:none;margin-top:16px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- =============================================
+     MISSING NUMBER MODAL
+============================================= -->
+<div class="game-overlay" id="overlayMissing">
+  <div class="game-modal">
+    <div class="game-modal-header">
+      <span>🧩 Missing Number</span>
+      <button class="game-close-btn" onclick="GameManager.close('missing')">✕</button>
+    </div>
+    <div style="padding:24px;text-align:center;">
+      <div id="misScore" style="font-size:0.85rem;color:var(--muted);margin-bottom:16px;">Question 1 of 10</div>
+      <div id="misSequence" style="font-size:1.8rem;font-weight:800;color:var(--accent);letter-spacing:6px;min-height:60px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;"></div>
+      <div id="misBtns" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:20px;"></div>
+      <div id="misFeedback" style="min-height:24px;margin-top:10px;font-size:0.9rem;"></div>
+      <div id="misResult" style="display:none;margin-top:16px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- =============================================
+     N-BACK MODAL
+============================================= -->
+<div class="game-overlay" id="overlayNback">
+  <div class="game-modal">
+    <div class="game-modal-header">
+      <span>🧠 N-Back Task</span>
+      <button class="game-close-btn" onclick="GameManager.close('nback')">✕</button>
+    </div>
+    <div style="padding:24px;text-align:center;">
+      <div id="nbStatus" style="font-size:0.85rem;color:var(--muted);margin-bottom:4px;">Press Start — remember items from N steps ago</div>
+      <div id="nbLevel" style="font-size:0.78rem;color:var(--accent);margin-bottom:12px;">Level: 2-Back</div>
+      <div id="nbDisplay" style="font-size:5rem;font-weight:900;color:var(--accent);min-height:100px;display:flex;align-items:center;justify-content:center;background:rgba(201,168,76,0.06);border-radius:16px;border:1px solid var(--border);"></div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:16px;">
+        <button onclick="NB.match()" style="padding:12px 32px;border-radius:99px;border:1px solid #34d399;background:rgba(52,211,153,0.1);color:#34d399;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.9rem;">✓ Match</button>
+        <button onclick="NB.noMatch()" style="padding:12px 32px;border-radius:99px;border:1px solid #f87171;background:rgba(248,113,113,0.1);color:#f87171;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.9rem;">✗ No Match</button>
+      </div>
+      <div id="nbScore" style="margin-top:12px;font-size:0.85rem;color:var(--muted);">Score: 0</div>
+      <button id="nbBtn" onclick="NB.action()" style="margin-top:14px;padding:10px 32px;border-radius:99px;border:none;background:var(--accent);color:#0a0800;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Start</button>
+      <div id="nbResult" style="display:none;margin-top:16px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- =============================================
+     SNAKE MODAL
+============================================= -->
+<div class="game-overlay" id="overlaySnake">
+  <div class="game-modal" style="max-width:420px;">
+    <div class="game-modal-header">
+      <span>🐍 Snake</span>
+      <button class="game-close-btn" onclick="GameManager.close('snake')">✕</button>
+    </div>
+    <div style="padding:16px;text-align:center;">
+      <div id="snakeScore" style="font-size:0.85rem;color:var(--muted);margin-bottom:8px;">Score: 0</div>
+      <canvas id="snakeCanvas" width="360" height="360" style="border-radius:12px;border:1px solid var(--border);display:block;margin:0 auto;"></canvas>
+      <div id="snakeStatus" style="margin-top:10px;font-size:0.85rem;color:var(--muted);">Use arrow keys or WASD</div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;">
+        <button onclick="SK.action()" id="snakeBtn" style="padding:8px 24px;border-radius:99px;border:none;background:#34d399;color:#0a0800;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Start</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(2,44px);gap:4px;margin:12px auto 0;width:fit-content;">
+        <div></div>
+        <button onclick="SK.setDir(0,-1)" style="border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:1.2rem;cursor:pointer;">↑</button>
+        <div></div>
+        <button onclick="SK.setDir(-1,0)" style="border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:1.2rem;cursor:pointer;">←</button>
+        <button onclick="SK.setDir(0,1)" style="border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:1.2rem;cursor:pointer;">↓</button>
+        <button onclick="SK.setDir(1,0)" style="border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:1.2rem;cursor:pointer;">→</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- =============================================
      PATTERN RECALL MODAL
