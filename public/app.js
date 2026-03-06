@@ -855,6 +855,17 @@ async function switchMode(btn) {
   document.getElementById('headerBadge').style.borderColor = m.color;
   document.getElementById('userInput').placeholder = m.placeholder;
 
+  // Show calculator button only in JEE mode
+  const calcBtn = document.getElementById('calcToggleBtn');
+  const calcPanel = document.getElementById('jeeCalcPanel');
+  if (currentMode === 'jee') {
+    calcBtn.style.display = 'flex';
+  } else {
+    calcBtn.style.display = 'none';
+    calcPanel.style.display = 'none';
+    calcBtn.classList.remove('active');
+  }
+
   await loadSessionStore(currentMode);
   const sessions = getSortedSessions(currentMode);
   if (sessions.length > 0) {
@@ -1411,3 +1422,59 @@ window.addEventListener('appinstalled', () => {
   showToast('✦ SeWalk AI installed successfully!');
   deferredPrompt = null;
 });
+
+// ── JEE Calculator ────────────────────────────────────
+let calcCurrentInput = '';
+let calcJustEvaled = false;
+
+function toggleCalc() {
+  const panel = document.getElementById('jeeCalcPanel');
+  const btn = document.getElementById('calcToggleBtn');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  btn.classList.toggle('active', !isOpen);
+}
+
+function calcInput(val) {
+  if (calcJustEvaled && !isNaN(val) ) { calcCurrentInput = ''; }
+  calcJustEvaled = false;
+  calcCurrentInput += val;
+  document.getElementById('calcDisplay').textContent = calcCurrentInput || '0';
+}
+
+function calcFn(fn) {
+  calcJustEvaled = false;
+  calcCurrentInput += `Math.${fn}(`;
+  document.getElementById('calcDisplay').textContent = calcCurrentInput;
+}
+
+function calcClear() {
+  calcCurrentInput = '';
+  calcJustEvaled = false;
+  document.getElementById('calcDisplay').textContent = '0';
+  document.getElementById('calcExpr').textContent = '';
+}
+
+function calcBackspace() {
+  calcCurrentInput = calcCurrentInput.slice(0, -1);
+  document.getElementById('calcDisplay').textContent = calcCurrentInput || '0';
+}
+
+function calcEquals() {
+  try {
+    const expr = calcCurrentInput
+      .replace(/Math\.PI/g, Math.PI)
+      .replace(/Math\.E/g, Math.E);
+    const result = Function('"use strict"; return (' + expr + ')')();
+    const rounded = parseFloat(result.toFixed(10));
+    document.getElementById('calcExpr').textContent = calcCurrentInput + ' =';
+    document.getElementById('calcDisplay').textContent = rounded;
+    calcCurrentInput = String(rounded);
+    calcJustEvaled = true;
+  } catch(e) {
+    document.getElementById('calcDisplay').textContent = 'Error';
+    document.getElementById('calcExpr').textContent = '';
+    calcCurrentInput = '';
+    calcJustEvaled = false;
+  }
+}
