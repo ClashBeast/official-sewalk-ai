@@ -251,6 +251,25 @@ const storage = {
 };
 
 // =============================================
+//  window.storage — Promise-based wrapper for new games
+//  (new games use window.storage.get/set as async/await)
+// =============================================
+window.storage = {
+  async get(key) {
+    try { const v = localStorage.getItem(key); return v !== null ? { value: v } : null; }
+    catch { return null; }
+  },
+  async set(key, value) {
+    try { localStorage.setItem(key, value); return { value }; }
+    catch { return null; }
+  },
+  async delete(key) {
+    try { localStorage.removeItem(key); return { deleted: true }; }
+    catch { return null; }
+  }
+};
+
+// =============================================
 //  CONSTANTS
 // =============================================
 const systemPrompts = {
@@ -1442,7 +1461,7 @@ async function lbSet(key, arr) {
   try { await window.storage.set('lb:' + key, JSON.stringify(arr), true); } catch {}
 }
 async function lbSubmit(key, score) {
-  const user = window._supabase ? (await window._supabase.auth.getSession())?.data?.session?.user?.email : null;
+  const user = (typeof _supabase !== 'undefined' && _supabase) ? (await _supabase.auth.getSession())?.data?.session?.user?.email : null;
   const name = user ? user.split('@')[0] : 'Guest';
   let arr = await lbGet(key);
   arr.push({ name, score, date: new Date().toLocaleDateString('en-IN') });
