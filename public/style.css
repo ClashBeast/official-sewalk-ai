@@ -405,9 +405,10 @@
   .score-chip-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
   .score-chip-val { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text); }
 
+  /* ── FIXED: 4 cards per row, compact grid ── */
   .game-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 20px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
   }
   .game-card {
     background: var(--surface); border: 1px solid var(--border);
@@ -418,9 +419,10 @@
   .game-card[data-game="pattern"]:hover { border-color: rgba(201,168,76,0.5); }
   .game-card[data-game="focus"]:hover  { border-color: rgba(255,107,53,0.5); }
 
+  /* ── FIXED: Compact banner ── */
   .game-card-banner {
-    height: 120px; display: flex; align-items: center; justify-content: center;
-    font-size: 3rem; position: relative; overflow: hidden;
+    height: 90px; display: flex; align-items: center; justify-content: center;
+    font-size: 2.2rem; position: relative; overflow: hidden;
   }
   .game-card[data-game="pattern"] .game-card-banner { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
   .game-card[data-game="focus"]   .game-card-banner { background: linear-gradient(135deg, #1a0f0a 0%, #2e1010 100%); }
@@ -440,10 +442,10 @@
   }
   .focus-shape-p.circle { border-radius: 50%; }
 
-  .game-card-body { padding: 18px 20px 20px; }
+  .game-card-body { padding: 14px 16px 16px; }
   .game-card-title {
-    font-family: 'Syne', sans-serif; font-size: 1rem;
-    font-weight: 700; margin-bottom: 5px; display: flex; align-items: center; gap: 8px;
+    font-family: 'Syne', sans-serif; font-size: 0.9rem;
+    font-weight: 700; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   }
   .game-skill-tag {
     font-size: 0.6rem; font-weight: 600; letter-spacing: 0.08em;
@@ -452,11 +454,11 @@
   .game-skill-tag.memory  { background: rgba(201,168,76,0.15); color: var(--accent); }
   .game-skill-tag.spatial { background: rgba(255,107,53,0.15); color: var(--gym); }
 
-  .game-card-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.6; margin-bottom: 14px; }
+  .game-card-desc { font-size: 0.76rem; color: var(--muted); line-height: 1.6; margin-bottom: 12px; }
   .game-play-btn {
     display: inline-flex; align-items: center; gap: 6px;
-    padding: 8px 18px; border-radius: 99px; border: none;
-    font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 600;
+    padding: 7px 16px; border-radius: 99px; border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 600;
     cursor: pointer; transition: opacity 0.2s, transform 0.15s;
   }
   .game-play-btn:hover { opacity: 0.85; transform: scale(1.03); }
@@ -664,7 +666,7 @@
   .msg-image {
     max-width: 220px; border-radius: 12px; margin-bottom: 6px;
     border: 1px solid rgba(201,168,76,0.2); display: block;
-  } 
+  }
 
   /* ── JEE Calculator ─────────────────────────────────── */
   #jeeCalcPanel {
